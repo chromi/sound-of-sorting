@@ -131,7 +131,7 @@ int SortTestApp::OnRun()
                     all_good = false;
                 }
 
-                wxPrintf(_T("%d/i%d -> %ld ms. "), n, inputi, millitime);
+                wxPrintf(_T("%lu/i%lu -> %lu ms. "), n, inputi, millitime);
                 fflush(stdout);
             }
         }
