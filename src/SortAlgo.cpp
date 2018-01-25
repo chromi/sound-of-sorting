@@ -71,6 +71,11 @@ const struct AlgoEntry g_algolist[] =
     { _("Quick Sort (dual pivot)"), &QuickSortDualPivot, UINT_MAX, UINT_MAX,
       _("Dual pivot quick sort variant: partitions \"<1<2?>\" using three pointers, "
         "two at left and one at right.") },
+    { _("Competent QuickSort"), &QuickSortCompetent, UINT_MAX, UINT_MAX,
+      _("Ternary-split quicksort variant with the usual practical implementation features: "
+        "median-of-three pivot, insertion-sort of small blocks, pivot values' position "
+        "established without a separate rearrangement pass, and smallest-first recursion "
+        "to exploit tail-call optimisation.") },
     { _("Bubble Sort"), &BubbleSort, UINT_MAX, UINT_MAX,
       wxEmptyString },
     { _("Cocktail Shaker Sort"), &CocktailShakerSort, UINT_MAX, UINT_MAX,
@@ -658,6 +663,143 @@ void dualPivotYaroslavskiy(class SortArray& a, int left, int right)
 void QuickSortDualPivot(class SortArray& a)
 {
     return dualPivotYaroslavskiy(a, 0, a.size()-1);
+}
+
+// ****************************************************************************
+// *** Competent QuickSort
+
+// by Jonathan Morton
+
+void QuickSortCompetent(class SortArray& A, ssize_t l, ssize_t r)
+{
+    if(r <= l+8) {
+        // Small subarrays get insertion sorted.
+        for(ssize_t i = l+1; i < r; i++) {
+            const value_type t = A[i];
+            ssize_t j;
+
+            for(j = i; j > l; j--) {
+                const value_type u = A[j-1];
+                if(u <= t)
+                    break;
+                A.set(j, u);
+            }
+            if(j < i)
+                A.set(j, t);
+        }
+
+        // Mark as completely sorted.
+        for(ssize_t i = l; i < r; i++)
+            A.mark(i, 2);
+        return;
+    }
+
+    // Unconditionally use median-of-three pivot.
+    // This can theoretically be subverted by crafted data, but this environment doesn't produce such data.
+    value_type pivot;
+    {
+        ssize_t ll = l, rr = r-1;
+        ssize_t mm = (l+r)/2;
+        value_type Al = A[ll], Am = A[mm], Ar = A[rr];
+
+        if(Al > Ar) {
+            std::swap(Al,Ar);
+            std::swap(ll,rr);
+        }
+
+        if(Al > Am) {
+            std::swap(Al,Am);
+            std::swap(ll,mm);
+        }
+
+        if(Am > Ar) {
+            std::swap(Am,Ar);
+            std::swap(mm,rr);
+        }
+
+        pivot = Am;
+
+        // We don't unconditionally move the pivot value anywhere.
+        // If it's out of position, it'll be corrected by the partitioning pass.
+        // That will also mark the value as "equal to the pivot".
+        // So we just mark it (and the block boundaries) once and forget about where we found it.
+        A.mark(l,   3);
+        A.mark(r-1, 3);
+        A.mark(mm,  6);
+    }
+
+    // Ternary partitioning pass, leaving small values at left, large values at right, and pivot values in middle.
+    // Shamelessly ripped from Yaroslavskiy dual-pivot, above.
+    volatile ssize_t i=l, j=l, k=r-1;
+    A.watch(&i, 4);
+    A.watch(&j, 4);
+    A.watch(&k, 4);
+
+    while(j <= k) {
+        const value_type v = A[j];
+        const int cv = v.cmp(pivot);
+
+        if(cv < 0) {
+            if(i < j)
+                A.swap(i, j);
+            A.mark(j++, 6);
+            A.mark(i++, 3);
+        } else if(cv > 0) {
+            value_type w;
+            int cw;
+            do {
+                w = A[k];
+                cw = w.cmp(pivot);
+                if(cw > 0)
+                    A.mark(k--, 3);
+            } while(cw > 0);
+
+            if(j > k)
+                break;
+            if(j < k)
+                A.swap(j, k);
+            A.mark(k--, 3);
+
+            if(cw < 0) {
+                A.swap(i, j);
+                A.mark(j++, 6);
+                A.mark(i++, 3);
+            } else {
+                A.mark(j++, 6);
+            }
+        } else {
+            A.mark(j++, 6);
+        }
+    }
+
+    A.unwatch_all();
+    k++;
+
+    // Mark pivot values as completely sorted, unmark all others.
+    for(j=l; j < i; j++)
+        A.unmark(j);
+    for(j=i; j < k; j++)
+        A.mark(j, 2);
+    for(j=k; j < r; j++)
+        A.unmark(j);
+
+    // Sort the smaller partition first, so that the larger one can tail-recurse.
+    // This guarantees O(log n) stack space requirement, assuming compiler is competent.
+    // Don't use -O0; use -Og, -Os, -O1 or better.
+    if(i-l < r-k) {
+        QuickSortCompetent(A, l, i);
+        QuickSortCompetent(A, k, r);
+        return;
+    } else {
+        QuickSortCompetent(A, k, r);
+        QuickSortCompetent(A, l, i);
+        return;
+    }
+}
+
+void QuickSortCompetent(class SortArray& A)
+{
+    QuickSortCompetent(A, 0, A.size());
 }
 
 // ****************************************************************************
