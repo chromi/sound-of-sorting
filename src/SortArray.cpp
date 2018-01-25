@@ -380,7 +380,7 @@ unsigned short SortArray::InWatchList(ssize_t idx) const
 
 int SortArray::GetIndexColor(size_t idx)
 {
-    int clr;
+    int clr = 0, acl = InAccessList(idx);
 
     // select color
     if (idx == m_access1.index)
@@ -399,8 +399,9 @@ int SortArray::GetIndexColor(size_t idx)
     {
         clr = m_mark[idx];
     }
-    else if ( (clr = InAccessList(idx)) >= 0 )
+    else if ( acl >= 0 )
     {
+        clr = acl;
     }
     else
     {
