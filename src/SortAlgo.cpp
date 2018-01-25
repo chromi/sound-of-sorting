@@ -203,9 +203,9 @@ void BinaryInsertionSort(SortArray& A)
         value_type key = A[i];
         A.mark(i);
 
-        int lo = 0, hi = i;
+        size_t lo = 0, hi = i;
         while (lo < hi) {
-            int mid = (lo + hi) / 2;
+            size_t mid = (lo + hi) / 2;
             if (key < A[mid])
                 hi = mid;
             else
@@ -214,12 +214,14 @@ void BinaryInsertionSort(SortArray& A)
 
         // item has to go into position lo
 
-        ssize_t j = i - 1;
-        while (j >= lo)
+        size_t j = i;
+        while (j > lo)
         {
-            A.swap(j, j+1);
+            A.set(j, A[j-1]);
             j--;
         }
+        if(lo < i)
+            A.set(lo, key);
 
         A.unmark(i);
     }
