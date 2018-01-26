@@ -729,7 +729,7 @@ void QuickSortCompetent(class SortArray& A, ssize_t l, ssize_t r)
     }
 
     // Ternary partitioning pass, leaving small values at left, large values at right, and pivot values in middle.
-    // Shamelessly ripped from Yaroslavskiy dual-pivot, above.
+    // Shamelessly ripped from Yaroslavskiy dual-pivot, above, and adapted to suit.
     volatile ssize_t i=l, j=l, k=r-1;
     A.watch(&i, 4);
     A.watch(&j, 4);
