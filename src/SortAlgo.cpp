@@ -57,6 +57,12 @@ const struct AlgoEntry g_algolist[] =
     { _("Merge Sort (iterative)"), &MergeSortIterative, UINT_MAX, 512,
       _("Merge sort variant which iteratively merges "
         "subarrays of sizes of powers of two.") },
+    { _("Merge Sort (in-place)"), &MergeSortInPlace, UINT_MAX, 512,
+      _("Merge sort variant which iteratively merges "
+        "subarrays of sizes of powers of two, using an in-place merging algorithm.") },
+    { _("Merge Sort (semi-in-place)"), &MergeSortSemiInPlace, UINT_MAX, 512,
+      _("Merge sort variant which iteratively merges "
+        "subarrays of sizes of powers of two, using a fixed amount of temporary storage.") },
     { _("Quick Sort (LR ptrs)"), &QuickSortLR, UINT_MAX, UINT_MAX,
       _("Quick sort variant with left and right pointers.") },
     { _("Quick Sort (LL ptrs)"), &QuickSortLL, UINT_MAX, UINT_MAX,
@@ -301,6 +307,248 @@ void MergeSortIterative(SortArray& A)
                   std::min(i + 2 * s, A.size()));
         }
     }
+}
+
+// ****************************************************************************
+// *** In-Place Merge Sort
+
+// By Jonathan Morton.
+// Based on https://xinok.wordpress.com/2014/08/17/in-place-merge-sort-demystified-2/
+// This is a stable sort with O(N * (log N)^2) worst-case complexity using O(1) extra space (ignoring call stack).
+// Hence it is slower than standard mergesort, but faster than insertion sort and uses less memory than standard mergesort.
+
+#define MERGESORT_INPLACE_THRESHOLD (16)
+
+void MergeSortSwapBlocks(SortArray& A, const size_t l, const size_t m, const size_t r)
+{
+    // We have two sorted, adjacent blocks (not necessarily of equal size) of which the last element of the right block sorts before
+    // the first element of the left block.  Our task is therefore to exchange them as efficiently as is practical, keeping order.
+    const size_t a = r-m, b = m-l;
+
+    // We can trivially do this with N swaps, reversing the two blocks and then reversing the concatenated block.  If a swap counts
+    // as only 2 array accesses, then this is even an efficient solution.  However, it no longer *looks* very much like a merge,
+    // since the blocks are temporarily in reverse order.
+
+    // If the blocks happen to be of equal size, then we can use N/2 swaps and it looks natural.
+    if(a == b) {
+        for(size_t i=l, j=m; i < m; i++, j++) {
+            A.mark_swap(i,j);
+            A.swap(i,j);
+        }
+        return;
+    }
+
+    // With unequal sizes, we must shuffle elements around in cycles of order gcd(_L,_R) for it to look like a merge.
+    // This results in 2N array accesses and is therefore efficient, but is less intuitive to code up correctly.
+    size_t c = a, d = b;
+
+    while(d) {
+        size_t e = c % d;
+        c = d;
+        d = e;
+    }
+    d = (a+b)/c;
+
+    for(size_t i=0; i < c; i++) {
+        size_t x = (a+i)%(a+b);
+        value_type t = A[x+l];
+
+        for(size_t j=0; j < d-1; j++) {
+            size_t y = (x+b)%(a+b);
+            A.set(x+l, A[y+l]);
+            A.mark_swap(x+l, y+l);
+            x = y;
+        }
+
+        A.set(x+l, t);
+    }
+}
+
+void MergeSortMergeSmall(SortArray& A, const size_t l, const size_t m, const size_t r, const bool root=false)
+{
+    // To deal with small blocks more efficiently, we could use an insertion sort (preserving the stable-sort property).
+    // However, I decided to keep it as a pure mergesort, using a fixed-size temporary array.
+    // Elements from the left block are only moved into the temporary array if they can't conveniently be held in the right block.
+    // Elements from the right block are always moved directly into the correct position.
+
+    ASSERT(m-l <= MERGESORT_INPLACE_THRESHOLD);
+
+    // Deal with trivial and simple cases first:
+
+    // Either of the blocks is zero-length?
+    if(m <= l || r <= l)
+        return;
+
+    if(root) {
+        for(size_t i=l; i < m; i++)
+            A.mark(i, 4);
+        for(size_t i=m; i < r; i++)
+            A.mark(i, 11);
+    }
+
+    // Elements already in correct order?
+    if(A[m-1] <= A[m])
+        return;
+
+    // Single-element blocks in wrong order?
+    if(r-l == 2) {
+        A.swap(l,m);
+        A.mark_swap(l,m);
+        return;
+    }
+
+    // Entire blocks need swapping?
+    if(A[r-1] < A[l]) {
+        MergeSortSwapBlocks(A, l, m, r);
+        return;
+    }
+
+    // Okay, down to business.
+    value_type tmp[MERGESORT_INPLACE_THRESHOLD];
+    size_t i=l, j=m, x=0, y=0;
+
+    while(i < j) {
+        if(x >= y || (j < r && tmp[x] > A[j])) {
+            // use right item
+            while(i < m && A[i] <= A[j])
+                i++;
+            if(i >= j)
+                break;
+
+            if(i >= m) {
+                // fill hole left by used right elements
+                A.mark_swap(i,j);
+                A.swap(i++, j++);
+            } else if(j+1 < r && A[i] <= A[j+1]) {
+                // store left element at head of remaining right block, preserving order
+                A.mark_swap(i,j);
+                A.swap(i++, j);
+            } else {
+                // store left element in tmp array
+                A.mark_swap(i,j);
+                A.mark(j, 12);
+                tmp[y++] = A[i];
+                A.set(i++, A[j++]);
+            }
+        } else {
+            // use item from tmp array, which always sorts before remaining left items
+            A.mark(i, 4);
+            if(i < m)
+                tmp[y++] = A[i];
+            A.set(i++, tmp[x++]);
+        }
+    }
+}
+
+void MergeSortMergeInPlace(SortArray& A, const size_t l, const size_t m, const size_t r, const bool smallOpt, const bool root=false)
+{
+    // We have two sorted blocks in [l..m) and [m..r), which we must merge into a single sorted block in [l..r).
+    // First, deal with trivial cases:
+
+    // Either of the blocks is zero-length?
+    if(m <= l || r <= l)
+        return;
+
+    if(root) {
+        for(size_t i=l; i < m; i++)
+            A.mark(i, 4);
+        for(size_t i=m; i < r; i++)
+            A.mark(i, 11);
+    }
+
+    // Elements already in correct order?
+    if(A[m-1] <= A[m])
+        return;
+
+    // Single-element blocks in wrong order?
+    if(r-l == 2) {
+        A.swap(l,m);
+        A.mark_swap(l,m);
+        return;
+    }
+
+    // Entire blocks need swapping?
+    if(A[r-1] < A[l]) {
+        MergeSortSwapBlocks(A, l, m, r);
+        return;
+    }
+
+    // Proceed by swapping the end of the left block with the beginning of the right block, preserving order,
+    // with the length of the swapped blocks chosen so that after the swap, all elements on the left sort before
+    // all elements on the right.
+    // We use a binary search to efficiently determine this length, comparing mirrored pairs of elements.
+
+    size_t x=l, y=m, z=l, zz=(m*2-1) - z;
+
+    if(zz > r-1) {
+        // The right block is smaller than the left block.
+        zz = r-1;
+        x = z = m*2-r;
+    }
+
+    while(x < y) {
+        if(A[z] <= A[zz])
+            x = z+1;
+        else
+            y = z;
+        z  = (x+y)/2;
+        zz = (m*2-1) - z;
+    }
+
+    for(size_t i=z, j=m; i < m; i++, j++) {
+        A.swap(i,j);
+        A.mark_swap(i,j);
+    }
+    zz++;
+
+    // This yields four smaller sorted blocks (of which up to two may be zero length).
+    // Recursively merge the two pairs of blocks.
+    // This recursion is what makes this algorithm O(N * (log N)^2) instead of O(N log N).
+    if(z > l) {
+        if(smallOpt && z-l <= MERGESORT_INPLACE_THRESHOLD)
+            MergeSortMergeSmall(A, l, z, m);
+        else
+            MergeSortMergeInPlace(A, l, z, m, smallOpt);
+    }
+    if(zz < r) {
+        if(smallOpt && zz-m <= MERGESORT_INPLACE_THRESHOLD)
+            MergeSortMergeSmall(A, m, zz, r);
+        else
+            MergeSortMergeInPlace(A, m, zz, r, smallOpt);
+    }
+}
+
+void MergeSortInPlace(SortArray& A, const size_t l, const size_t r, const bool smallOpt)
+{
+    // Iterative mergesort.
+    for(size_t s=1; s && s < (r-l); s *= 2) {
+        for(size_t i=l; i < r; i += s*2) {
+            size_t j=i+s;
+            size_t k=j+s;
+
+            if(j >= r)
+                break;
+            if(k > r)
+                k = r;
+
+            if(smallOpt && s <= MERGESORT_INPLACE_THRESHOLD)
+                MergeSortMergeSmall(A, i, j, k, true);
+            else
+                MergeSortMergeInPlace(A, i, j, k, smallOpt, true);
+        }
+    }
+}
+
+// This version is truly in-place, using no temporary arrays.
+void MergeSortInPlace(SortArray& A)
+{
+    MergeSortInPlace(A, 0, A.size(), false);
+}
+
+// This version switches to a conventional mergesort for small merges, using O(1) extra memory.
+void MergeSortSemiInPlace(SortArray& A)
+{
+    MergeSortInPlace(A, 0, A.size(), true);
 }
 
 // ****************************************************************************
