@@ -63,6 +63,8 @@ const struct AlgoEntry g_algolist[] =
     { _("Merge Sort (semi-in-place)"), &MergeSortSemiInPlace, UINT_MAX, 512,
       _("Merge sort variant which iteratively merges "
         "subarrays of sizes of powers of two, using a fixed amount of temporary storage.") },
+    { _("CataMerge Sort"), &CataMergeSort, UINT_MAX, 512,
+      _("Merge sort variant which searches for runs in either direction, reverses descending runs, then merges them.") },
     { _("Quick Sort (LR ptrs)"), &QuickSortLR, UINT_MAX, UINT_MAX,
       _("Quick sort variant with left and right pointers.") },
     { _("Quick Sort (LL ptrs)"), &QuickSortLL, UINT_MAX, UINT_MAX,
@@ -549,6 +551,92 @@ void MergeSortInPlace(SortArray& A)
 void MergeSortSemiInPlace(SortArray& A)
 {
     MergeSortInPlace(A, 0, A.size(), true);
+}
+
+// ****************************************************************************
+// *** CataMerge Sort
+//
+// An adaptive, non-stable, in-place mergesort variant.  The array is examined for increasing
+// and decreasing runs of values.  Decreasing runs are reversed to make them increasing runs.
+// A list of runs is kept; whenever the last run is bigger than the previous one (or the end
+// of the array is reached), it is merged in-place with the previous run.
+//
+// Inspired by the abandoned "Catasort" algorithm:  https://www.youtube.com/watch?v=ND6sC_ZzUHM
+// According to the author, this name is a contraction of "Catapillar sort".
+//
+// As far as I can tell, Catasort repeatedly identifies decreasing runs and reverses
+// them, making it a sort of generalised pancake sort.  In practice the performance and
+// behaviour are similar to bubble or cocktail sort, except when the whole array is in
+// descending order.  By combining this idea with mergesort, considerably better behaviour
+// should result in the general case.
+
+void CataMergeSort(SortArray& A)
+{
+	std::vector<size_t> runs;
+	size_t i=0, j=0;
+	int runPolarity = 0;
+
+	runs.push_back(0);
+
+	while(++j < A.size()) {
+		int c = A[j].cmp(A[j-1]);
+
+		if(!runPolarity) {
+			runPolarity = c;
+		} else if(c * runPolarity < 0) {
+			// found end of run at A[j-1]
+			if(runPolarity < 0) {
+				// descending run, need to reverse it
+				for(size_t k=j-1; k > i; k--,i++)
+					A.swap(i,k);
+			}
+			i = j;
+
+			// check if we need to merge with previous run(s)
+			for(;;) {
+				// are there at least two runs?
+				if(runs.size() < 2)
+					break;
+
+				size_t k = runs[runs.size()-1], l = runs[runs.size()-2];
+				size_t kk = i-k, ll = k-l;
+
+				// is the last run at least as big as the previous one?
+				if(kk < ll)
+					break;
+
+				// both true, so merge required; repeat as necessary
+				runs.pop_back();
+				if(ll > MERGESORT_INPLACE_THRESHOLD)
+					MergeSortMergeInPlace(A, l, k, j, true, true);
+				else
+					MergeSortMergeSmall(A, l, k, j, true);
+			}
+
+			// record new run
+			runs.push_back(j);
+			runPolarity = 0;
+		}
+	}
+
+	// handle final run
+	if(runPolarity < 0) {
+		// descending run, need to reverse it
+		for(size_t k=j-1; k > i; k--,i++)
+			A.swap(i,k);
+	}
+
+	// merge all runs found into one
+	while(runs.size() > 1) {
+		size_t k = runs[runs.size()-1], l = runs[runs.size()-2];
+		size_t ll = k-l;
+
+		runs.pop_back();
+		if(ll > MERGESORT_INPLACE_THRESHOLD)
+			MergeSortMergeInPlace(A, l, k, j, true, true);
+		else
+			MergeSortMergeSmall(A, l, k, j, true);
+	}
 }
 
 // ****************************************************************************

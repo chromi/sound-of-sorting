@@ -61,6 +61,8 @@ void MergeSortIterative(class SortArray& a);
 void MergeSortInPlace(class SortArray& a);
 void MergeSortSemiInPlace(class SortArray& a);
 
+void CataMergeSort(class SortArray& a);
+
 wxArrayString QuickSortPivotText();
 
 enum QuickSortPivotType { PIVOT_FIRST, PIVOT_LAST, PIVOT_MID, PIVOT_RANDOM, PIVOT_MEDIAN3 };
