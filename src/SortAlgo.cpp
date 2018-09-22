@@ -570,6 +570,29 @@ void MergeSortSemiInPlace(SortArray& A)
 // descending order.  By combining this idea with mergesort, considerably better behaviour
 // should result in the general case.
 
+void CataMergeRuns(SortArray& A, std::vector<size_t>& runs)
+{
+	// find the adjacent pair of runs with the smallest total length, and merge them.
+	size_t minlen=A.size(), mini=0;
+
+	for(size_t i=0; i < runs.size()-2; i++) {
+		size_t len = runs[i+2] - runs[i];
+		if(len < minlen) {
+			minlen = len;
+			mini = i;
+		}
+	}
+
+	size_t l = runs[mini], k = runs[mini+1], j = runs[mini+2];
+
+	if(k-l > MERGESORT_INPLACE_THRESHOLD)
+		MergeSortMergeInPlace(A, l, k, j, true, true);
+	else
+		MergeSortMergeSmall(A, l, k, j, true);
+
+	runs.erase(runs.begin() + mini+1);
+}
+
 void CataMergeSort(SortArray& A)
 {
 	std::vector<size_t> runs;
@@ -579,7 +602,7 @@ void CataMergeSort(SortArray& A)
 	runs.push_back(0);
 
 	while(++j < A.size()) {
-		int c = A[j].cmp(A[j-1]);
+		int c = (A[j] < A[j-1]) ? -1 : 1;
 
 		if(!runPolarity) {
 			runPolarity = c;
@@ -590,32 +613,29 @@ void CataMergeSort(SortArray& A)
 				for(size_t k=j-1; k > i; k--,i++)
 					A.swap(i,k);
 			}
-			i = j;
+
+			// record new run
+			runs.push_back(j);
+			runPolarity = 0;
 
 			// check if we need to merge with previous run(s)
 			for(;;) {
 				// are there at least two runs?
-				if(runs.size() < 2)
+				if(runs.size() < 3)
 					break;
 
-				size_t k = runs[runs.size()-1], l = runs[runs.size()-2];
-				size_t kk = i-k, ll = k-l;
+				size_t k = runs[runs.size()-2], l = runs[runs.size()-3];
+				size_t kk = j-k, ll = k-l;
 
 				// is the last run at least as big as the previous one?
 				if(kk < ll)
 					break;
 
 				// both true, so merge required; repeat as necessary
-				runs.pop_back();
-				if(ll > MERGESORT_INPLACE_THRESHOLD)
-					MergeSortMergeInPlace(A, l, k, j, true, true);
-				else
-					MergeSortMergeSmall(A, l, k, j, true);
+				CataMergeRuns(A, runs);
 			}
 
-			// record new run
-			runs.push_back(j);
-			runPolarity = 0;
+			i = j;
 		}
 	}
 
@@ -625,18 +645,11 @@ void CataMergeSort(SortArray& A)
 		for(size_t k=j-1; k > i; k--,i++)
 			A.swap(i,k);
 	}
+	runs.push_back(j);
 
 	// merge all runs found into one
-	while(runs.size() > 1) {
-		size_t k = runs[runs.size()-1], l = runs[runs.size()-2];
-		size_t ll = k-l;
-
-		runs.pop_back();
-		if(ll > MERGESORT_INPLACE_THRESHOLD)
-			MergeSortMergeInPlace(A, l, k, j, true, true);
-		else
-			MergeSortMergeSmall(A, l, k, j, true);
-	}
+	while(runs.size() > 2)
+		CataMergeRuns(A, runs);
 }
 
 // ****************************************************************************
