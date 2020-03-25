@@ -110,6 +110,9 @@ void SortArray::FillInputlist(wxArrayString& list)
     list.Add(_("Shuffled Cubic"));
     list.Add(_("Shuffled Quintic"));
     list.Add(_("Shuffled n-2 Equal"));
+    list.Add(_("Sine Wave"));
+    list.Add(_("Cosine Wave"));
+    list.Add(_("Shuffled Sinewave"));
 }
 
 void SortArray::FillData(unsigned int schema, size_t arraysize)
@@ -178,6 +181,40 @@ void SortArray::FillData(unsigned int schema, size_t arraysize)
         }
         m_array[m_array.size()-1] = ArrayItem(arraysize);
 
+        std::random_shuffle(m_array.begin(), m_array.end());
+    }
+    else if (schema == 6) // sine waves
+    {
+        for (size_t i = 0; i < m_array.size(); ++i)
+        {
+        	// normalise domain to [0,8*pi]
+        	double x = i * (8 * 3.141592653589 / m_array.size());
+        	double v = sin(x);
+            double w = (v + 1.0) / 2.0 * arraysize + 1;
+        	m_array[i] = ArrayItem(w / 3 + 1);
+        }
+    }
+    else if (schema == 7) // cosine waves
+    {
+        for (size_t i = 0; i < m_array.size(); ++i)
+        {
+        	// normalise domain to [0,8*pi]
+        	double x = i * (8 * 3.141592653589 / m_array.size());
+        	double v = cos(x);
+            double w = (v + 1.0) / 2.0 * arraysize + 1;
+        	m_array[i] = ArrayItem(w / 3 + 1);
+        }
+    }
+    else if (schema == 8) // shuffled sinewaves
+    {
+        for (size_t i = 0; i < m_array.size(); ++i)
+        {
+        	// normalise domain to [0,8*pi]
+        	double x = i * (8 * 3.141592653589 / m_array.size());
+        	double v = sin(x);
+            double w = (v + 1.0) / 2.0 * arraysize + 1;
+        	m_array[i] = ArrayItem(w / 3 + 1);
+        }
         std::random_shuffle(m_array.begin(), m_array.end());
     }
     else // fallback

@@ -398,6 +398,13 @@ public:
         m_mark[i] = color;
     }
 
+    /// Get mark, without dynamic effects
+    int get_mark(size_t i)
+    {
+        ASSERT(i < m_array.size());
+    	return m_mark[i];
+    }
+
     /// Swap color for two array indexes.
     void mark_swap(size_t i, size_t j)
     {
