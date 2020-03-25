@@ -53,6 +53,7 @@ extern const struct AlgoEntry* g_algolist_end;
 // *** Sorting Algorithms
 
 void SelectionSort(class SortArray& a);
+void DualSelectionSort(class SortArray& a);
 void InsertionSort(class SortArray& a);
 void BinaryInsertionSort(class SortArray& a);
 
@@ -62,10 +63,11 @@ void MergeSortInPlace(class SortArray& a);
 void MergeSortSemiInPlace(class SortArray& a);
 
 void CataMergeSort(class SortArray& a);
+void CataMergeSortStable(class SortArray& a);
 
 wxArrayString QuickSortPivotText();
 
-enum QuickSortPivotType { PIVOT_FIRST, PIVOT_LAST, PIVOT_MID, PIVOT_RANDOM, PIVOT_MEDIAN3 };
+enum QuickSortPivotType { PIVOT_FIRST, PIVOT_LAST, PIVOT_MID, PIVOT_RANDOM, PIVOT_MEDIAN3, PIVOT_MEDIAN_MEDIANS };
 extern QuickSortPivotType g_quicksort_pivot;
 
 void QuickSortLR(class SortArray& a);
@@ -73,7 +75,8 @@ void QuickSortLL(class SortArray& a);
 void QuickSortTernaryLR(class SortArray& a);
 void QuickSortTernaryLL(class SortArray& a);
 void QuickSortDualPivot(class SortArray& a);
-void QuickSortCompetent(class SortArray& a);
+
+void IntroSort(class SortArray& a);
 
 void BubbleSort(class SortArray& a);
 void CocktailShakerSort(class SortArray& a);

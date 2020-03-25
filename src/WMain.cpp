@@ -66,7 +66,7 @@ WMain::WMain(wxWindow* parent)
 
     // insert quicksort pivot rules into wxChoice
     pivotRuleChoice->Append( QuickSortPivotText() );
-    pivotRuleChoice->SetSelection(0);
+    pivotRuleChoice->SetSelection(g_quicksort_pivot);
 
     // set default speed
     speedSlider->SetValue(1000);
@@ -376,7 +376,9 @@ void WMain::OnAlgoList(wxCommandEvent&)
     int sel = algoList->GetSelection();
     wxString text;
 
-    bool isQuickSort = (algoList->GetStringSelection().Contains(_("Quick Sort")));
+    bool isQuickSort =
+    	(algoList->GetStringSelection().Contains(_("Quick Sort"))) ||
+    	(algoList->GetStringSelection().Contains(_("IntroSort")));
     panelQuickSortPivot->Show(isQuickSort);
 
     if (sel >= 0 && sel < (int)g_algolist_size && !g_algolist[sel].text.IsEmpty())

@@ -47,6 +47,8 @@ const struct AlgoEntry g_algolist[] =
 {
     { _("Selection Sort"), &SelectionSort, UINT_MAX, UINT_MAX,
       wxEmptyString },
+    { _("Dual Selection Sort"), &DualSelectionSort, UINT_MAX, UINT_MAX,
+      wxEmptyString },
     { _("Insertion Sort"), &InsertionSort, UINT_MAX, UINT_MAX,
       wxEmptyString },
     { _("Binary Insertion Sort"), &BinaryInsertionSort, UINT_MAX, UINT_MAX,
@@ -63,8 +65,10 @@ const struct AlgoEntry g_algolist[] =
     { _("Merge Sort (semi-in-place)"), &MergeSortSemiInPlace, UINT_MAX, 512,
       _("Merge sort variant which iteratively merges "
         "subarrays of sizes of powers of two, using a fixed amount of temporary storage.") },
-    { _("CataMerge Sort"), &CataMergeSort, UINT_MAX, 512,
-      _("Merge sort variant which searches for runs in either direction, reverses descending runs, then merges them.") },
+    { _("CataMerge Sort (stable)"), &CataMergeSortStable, UINT_MAX, 512,
+      _("Merge sort variant which searches for runs in either direction, reverses descending runs, then merges them.  Runs of equal values are treated as ascending.") },
+    { _("CataMerge Sort (non-stable)"), &CataMergeSort, UINT_MAX, 512,
+      _("Merge sort variant which searches for runs in either direction, reverses descending runs, then merges them.  Runs of equal values are treated as part of a run in either direction.") },
     { _("Quick Sort (LR ptrs)"), &QuickSortLR, UINT_MAX, UINT_MAX,
       _("Quick sort variant with left and right pointers.") },
     { _("Quick Sort (LL ptrs)"), &QuickSortLL, UINT_MAX, UINT_MAX,
@@ -79,11 +83,10 @@ const struct AlgoEntry g_algolist[] =
     { _("Quick Sort (dual pivot)"), &QuickSortDualPivot, UINT_MAX, UINT_MAX,
       _("Dual pivot quick sort variant: partitions \"<1<2?>\" using three pointers, "
         "two at left and one at right.") },
-    { _("Competent QuickSort"), &QuickSortCompetent, UINT_MAX, UINT_MAX,
+    { _("IntroSort"), &IntroSort, UINT_MAX, UINT_MAX,
       _("Ternary-split quicksort variant with the usual practical implementation features: "
-        "median-of-three pivot, insertion-sort of small blocks, pivot values' position "
-        "established without a separate rearrangement pass, and smallest-first recursion "
-        "to exploit tail-call optimisation.") },
+        "insertion-sort of small blocks, pivot values' position established without a separate rearrangement pass, "
+        "and smallest-first recursion to exploit tail-call optimisation.") },
     { _("Bubble Sort"), &BubbleSort, UINT_MAX, UINT_MAX,
       wxEmptyString },
     { _("Cocktail Shaker Sort"), &CocktailShakerSort, UINT_MAX, UINT_MAX,
@@ -162,6 +165,46 @@ void SelectionSort(SortArray& A)
         // mark the last good element
         if (i > 0) A.unmark(i-1);
         A.mark(i);
+    }
+    A.unwatch_all();
+}
+
+void DualSelectionSort(SortArray& A)
+{
+    volatile ssize_t jMin = 0, jMax = 0;
+    A.watch(&jMin, 3);
+    A.watch(&jMax, 3);
+
+    for (size_t i = 0; i < A.size() / 2; ++i)
+    {
+    	size_t k = A.size() - i;
+    	value_type tMin, tMax;
+        jMin = jMax = i;
+        tMin = tMax = A[i];
+
+        for (size_t j = i+1; j < k; ++j)
+        {
+        	const value_type t = A[j];
+
+            if (t < tMin) {
+                A.mark_swap(j, jMin);
+                jMin = j;
+                tMin = t;
+            } else if (t > tMax) {
+                A.mark_swap(j, jMax);
+                jMax = j;
+                tMax = t;
+            }
+        }
+
+        A.swap(i, jMin);
+        if(jMax == (ssize_t) i)
+        	jMax = jMin;
+        A.swap(k-1, jMax);
+
+        // mark the last good element
+        A.mark(i);
+        A.mark(k-1);
     }
     A.unwatch_all();
 }
@@ -593,7 +636,7 @@ void CataMergeRuns(SortArray& A, std::vector<size_t>& runs)
 	runs.erase(runs.begin() + mini+1);
 }
 
-void CataMergeSort(SortArray& A)
+void CataMergeSort(SortArray& A, bool stable)
 {
 	std::vector<size_t> runs;
 	size_t i=0, j=0;
@@ -602,7 +645,12 @@ void CataMergeSort(SortArray& A)
 	runs.push_back(0);
 
 	while(++j < A.size()) {
-		int c = (A[j] < A[j-1]) ? -1 : 1;
+		int c = 0;
+
+		if(stable)
+			c = (A[j] < A[j-1]) ? -1 : 1;
+		else
+			c = A[j].cmp(A[j-1]);
 
 		if(!runPolarity) {
 			runPolarity = c;
@@ -652,10 +700,73 @@ void CataMergeSort(SortArray& A)
 		CataMergeRuns(A, runs);
 }
 
+void CataMergeSort(SortArray& A)
+{
+	CataMergeSort(A, false);
+}
+
+void CataMergeSortStable(SortArray& A)
+{
+	CataMergeSort(A, true);
+}
+
 // ****************************************************************************
 // *** Quick Sort Pivot Selection
 
-QuickSortPivotType g_quicksort_pivot = PIVOT_FIRST;
+QuickSortPivotType g_quicksort_pivot = PIVOT_MEDIAN3;
+
+// Recursive median-of-medians implementation
+ssize_t QuickSortMedianMedians(SortArray& A, ssize_t lo, ssize_t hi)
+{
+   	ssize_t log5 = 0, exp5 = 1, exp5_1 = 0;
+   	ssize_t m[5], n = hi-lo;
+   	value_type v[5];
+
+   	while(exp5 < n) {
+   		exp5_1 = exp5;
+		log5++;
+		exp5 *= 5;
+   	}
+
+   	if(log5 < 1)
+   		return lo;
+
+	// fill indexes, recursing if required
+	if(log5 == 1) {
+		for(ssize_t i=lo, j=0; i < hi; i++,j++) {
+			m[j] = i;
+			v[j] = A[i];
+		}
+	} else {
+		n = 0;
+		for(ssize_t i=lo; i < hi; i += exp5_1) {
+			m[n] = QuickSortMedianMedians(A, i, std::min(hi, i+exp5_1));
+			v[n] = A[m[n]];
+			n++;
+		}
+	}
+
+	// sort - insertion sort is good enough for 5 elements
+	for(ssize_t i=1; i < n; i++) {
+		ssize_t t = m[i];
+        const value_type tt = v[i];
+		ssize_t j;
+
+		for(j=i; j; j--) {
+			if(v[j-1] <= tt)
+				break;
+			m[j] = m[j-1];
+			v[j] = v[j-1];
+		}
+		if(j < i) {
+			m[j] = t;
+			v[j] = tt;
+		}
+	}
+
+	// return median
+	return m[(n-1)/2];
+}
 
 // some quicksort variants use hi inclusive and some exclusive, we require it
 // to be _exclusive_. hi == array.end()!
@@ -687,6 +798,11 @@ ssize_t QuickSortSelectPivot(SortArray& A, ssize_t lo, ssize_t hi)
             : (A[mid] > A[hi-1] ? mid : (A[lo] < A[hi-1] ? lo : hi-1));
     }
 
+    if (g_quicksort_pivot == PIVOT_MEDIAN_MEDIANS)
+    {
+    	return QuickSortMedianMedians(A, lo, hi);
+    }
+
     return lo;
 }
 
@@ -699,6 +815,7 @@ wxArrayString QuickSortPivotText()
     sl.Add( _("Middle Item") );
     sl.Add( _("Random Item") );
     sl.Add( _("Median of Three") );
+    sl.Add( _("Median of Medians") );
 
     return sl;
 }
@@ -1015,14 +1132,14 @@ void QuickSortDualPivot(class SortArray& a)
 }
 
 // ****************************************************************************
-// *** Competent QuickSort
+// *** IntroSort
 
 // by Jonathan Morton
 
-void QuickSortCompetent(class SortArray& A, ssize_t l, ssize_t r)
+void IntroSort(class SortArray& A, ssize_t l, ssize_t r, ssize_t expectedDepth)
 {
-    if(r <= l+8) {
-        // Small subarrays get insertion sorted.
+    // Small subarrays get insertion sorted.
+    if(r <= l + 16) {
         for(ssize_t i = l+1; i < r; i++) {
             const value_type t = A[i];
             ssize_t j;
@@ -1043,39 +1160,18 @@ void QuickSortCompetent(class SortArray& A, ssize_t l, ssize_t r)
         return;
     }
 
-    // Unconditionally use median-of-three pivot.
-    // This can theoretically be subverted by crafted data, but this environment doesn't produce such data.
-    value_type pivot;
-    {
-        ssize_t ll = l, rr = r-1;
-        ssize_t mm = (l+r)/2;
-        value_type Al = A[ll], Am = A[mm], Ar = A[rr];
+	// Main body of sort is a competent ternary quicksort.  We allow the user to select the default pivot strategy.
+	// However, if we recurse more than log2(N) levels, we switch to the slower but more reliable median-of-medians.
+    ssize_t p = (expectedDepth >= r-l) ? QuickSortSelectPivot(A, l, r) : QuickSortMedianMedians(A, l, r);
+    const value_type pivot = A[p];
 
-        if(Al > Ar) {
-            std::swap(Al,Ar);
-            std::swap(ll,rr);
-        }
-
-        if(Al > Am) {
-            std::swap(Al,Am);
-            std::swap(ll,mm);
-        }
-
-        if(Am > Ar) {
-            std::swap(Am,Ar);
-            std::swap(mm,rr);
-        }
-
-        pivot = Am;
-
-        // We don't unconditionally move the pivot value anywhere.
-        // If it's out of position, it'll be corrected by the partitioning pass.
-        // That will also mark the value as "equal to the pivot".
-        // So we just mark it (and the block boundaries) once and forget about where we found it.
-        A.mark(l,   3);
-        A.mark(r-1, 3);
-        A.mark(mm,  6);
-    }
+    // We don't unconditionally move the pivot value anywhere.
+    // If it's out of position, it'll be corrected by the partitioning pass.
+    // That will also mark the value as "equal to the pivot".
+    // So we just mark it (and the block boundaries) once and forget about where we found it.
+    A.mark(l,   3);
+    A.mark(r-1, 3);
+    A.mark(p,   6);
 
     // Ternary partitioning pass, leaving small values at left, large values at right, and pivot values in middle.
     // Shamelessly ripped from Yaroslavskiy dual-pivot, above, and adapted to suit.
@@ -1135,20 +1231,22 @@ void QuickSortCompetent(class SortArray& A, ssize_t l, ssize_t r)
     // Sort the smaller partition first, so that the larger one can tail-recurse.
     // This guarantees O(log n) stack space requirement, assuming compiler is competent.
     // Don't use -O0; use -Og, -Os, -O1 or better.
+    expectedDepth = (expectedDepth * 3) / 4;
+
     if(i-l < r-k) {
-        QuickSortCompetent(A, l, i);
-        QuickSortCompetent(A, k, r);
+        IntroSort(A, l, i, expectedDepth);
+        IntroSort(A, k, r, expectedDepth);
         return;
     } else {
-        QuickSortCompetent(A, k, r);
-        QuickSortCompetent(A, l, i);
+        IntroSort(A, k, r, expectedDepth);
+        IntroSort(A, l, i, expectedDepth);
         return;
     }
 }
 
-void QuickSortCompetent(class SortArray& A)
+void IntroSort(class SortArray& A)
 {
-    QuickSortCompetent(A, 0, A.size());
+    IntroSort(A, 0, A.size(), A.size());
 }
 
 // ****************************************************************************
@@ -2137,6 +2235,10 @@ void CycleSort(SortArray& array, ssize_t n)
     // Loop through the array to find cycles to rotate.
     for (cycleStart = 0; cycleStart < n - 1; ++cycleStart)
     {
+    	// first check if already in place
+    	if(array.get_mark(cycleStart) == 2)
+    		continue;
+
         value_type& item = array.get_mutable(cycleStart);
 
         do {
@@ -2144,8 +2246,14 @@ void CycleSort(SortArray& array, ssize_t n)
             rank = cycleStart;
             for (ssize_t i = cycleStart + 1; i < n; ++i)
             {
-                if (array[i] < item)
-                    rank++;
+            	if(array.get_mark(i) == 2)
+            		continue;
+
+                if (array[i] < item) {
+                	do {
+                    	rank++;
+                    } while(array.get_mark(rank) == 2);
+                }
             }
 
             // If the item is already there, this is a 1-cycle.
