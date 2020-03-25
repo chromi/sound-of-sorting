@@ -416,12 +416,12 @@ void MergeSortMergeSmall(SortArray& A, const size_t l, const size_t m, const siz
     // Elements from the left block are only moved into the temporary array if they can't conveniently be held in the right block.
     // Elements from the right block are always moved directly into the correct position.
 
-    ASSERT(m-l <= MERGESORT_INPLACE_THRESHOLD);
+    ASSERT(m-l <= MERGESORT_INPLACE_THRESHOLD || r-m <= MERGESORT_INPLACE_THRESHOLD);
 
     // Deal with trivial and simple cases first:
 
     // Either of the blocks is zero-length?
-    if(m <= l || r <= l)
+    if(m <= l || r <= m)
         return;
 
     if(root) {
@@ -450,37 +450,73 @@ void MergeSortMergeSmall(SortArray& A, const size_t l, const size_t m, const siz
 
     // Okay, down to business.
     value_type tmp[MERGESORT_INPLACE_THRESHOLD];
-    size_t i=l, j=m, x=0, y=0;
+    if(m-l <= MERGESORT_INPLACE_THRESHOLD) {
+        size_t i=l, j=m, x=0, y=0;
 
-    while(i < j) {
-        if(x >= y || (j < r && tmp[x] > A[j])) {
-            // use right item
-            while(i < m && A[i] <= A[j])
-                i++;
-            if(i >= j)
-                break;
+        while(i < j) {
+            if(x >= y || (j < r && tmp[x] > A[j])) {
+                // use right item
+                while(i < m && A[i] <= A[j])
+                    i++;
+                if(i >= j)
+                    break;
 
-            if(i >= m) {
-                // fill hole left by used right elements
-                A.mark_swap(i,j);
-                A.swap(i++, j++);
-            } else if(j+1 < r && A[i] <= A[j+1]) {
-                // store left element at head of remaining right block, preserving order
-                A.mark_swap(i,j);
-                A.swap(i++, j);
+                if(i >= m) {
+                    // fill hole left by used right elements
+                    A.mark_swap(i,j);
+                    A.swap(i++, j++);
+                } else if(j+1 < r && A[i] <= A[j+1]) {
+                    // store left element at head of remaining right block, preserving order
+                    A.mark_swap(i,j);
+                    A.swap(i++, j);
+                } else {
+                    // store left element in tmp array
+                    A.mark_swap(i,j);
+                    A.mark(j, 12);
+                    tmp[y++] = A[i];
+                    A.set(i++, A[j++]);
+                }
             } else {
-                // store left element in tmp array
-                A.mark_swap(i,j);
-                A.mark(j, 12);
-                tmp[y++] = A[i];
-                A.set(i++, A[j++]);
+                // use item from tmp array, which always sorts before remaining left items
+                A.mark(i, 4);
+                if(i < m)
+                    tmp[y++] = A[i];
+                A.set(i++, tmp[x++]);
             }
-        } else {
-            // use item from tmp array, which always sorts before remaining left items
-            A.mark(i, 4);
-            if(i < m)
-                tmp[y++] = A[i];
-            A.set(i++, tmp[x++]);
+        }
+    } else {
+        size_t i=r, j=m, x=0, y=0;
+
+        while(i > j) {
+            if(x >= y || (j > l && tmp[x] < A[j-1])) {
+                // use left item
+                while(i > m && A[i-1] >= A[j-1])
+                    i--;
+                if(i <= j)
+                    break;
+
+                if(i <= m) {
+                    // fill hole left by used left elements
+                    A.mark_swap(i-1, j-1);
+                    A.swap(--i, --j);
+                } else if(j-1 > l && A[i-1] >= A[j-2]) {
+                    // store right element at tail of remaining left block, preserving order
+                    A.mark_swap(i-1, j-1);
+                    A.swap(--i, j-1);
+                } else {
+                    // store right element in tmp array
+                    A.mark_swap(i-1, j-1);
+                    A.mark(j-1, 12);
+                    tmp[y++] = A[i-1];
+                    A.set(--i, A[--j]);
+                }
+            } else {
+                // use item from tmp array, which always sorts after remaining right items
+                A.mark(i-1, 11);
+                if(i > m)
+                    tmp[y++] = A[i-1];
+                A.set(--i, tmp[x++]);
+            }
         }
     }
 }
@@ -550,13 +586,13 @@ void MergeSortMergeInPlace(SortArray& A, const size_t l, const size_t m, const s
     // Recursively merge the two pairs of blocks.
     // This recursion is what makes this algorithm O(N * (log N)^2) instead of O(N log N).
     if(z > l) {
-        if(smallOpt && z-l <= MERGESORT_INPLACE_THRESHOLD)
+        if(smallOpt && (z-l <= MERGESORT_INPLACE_THRESHOLD || m-z <= MERGESORT_INPLACE_THRESHOLD))
             MergeSortMergeSmall(A, l, z, m);
         else
             MergeSortMergeInPlace(A, l, z, m, smallOpt);
     }
     if(zz < r) {
-        if(smallOpt && zz-m <= MERGESORT_INPLACE_THRESHOLD)
+        if(smallOpt && (zz-m <= MERGESORT_INPLACE_THRESHOLD || r-zz <= MERGESORT_INPLACE_THRESHOLD))
             MergeSortMergeSmall(A, m, zz, r);
         else
             MergeSortMergeInPlace(A, m, zz, r, smallOpt);
@@ -576,7 +612,7 @@ void MergeSortInPlace(SortArray& A, const size_t l, const size_t r, const bool s
             if(k > r)
                 k = r;
 
-            if(smallOpt && s <= MERGESORT_INPLACE_THRESHOLD)
+            if(smallOpt && k-j <= MERGESORT_INPLACE_THRESHOLD)
                 MergeSortMergeSmall(A, i, j, k, true);
             else
                 MergeSortMergeInPlace(A, i, j, k, smallOpt, true);
@@ -628,7 +664,7 @@ void CataMergeRuns(SortArray& A, std::vector<size_t>& runs)
 
 	size_t l = runs[mini], k = runs[mini+1], j = runs[mini+2];
 
-	if(k-l > MERGESORT_INPLACE_THRESHOLD)
+	if(k-l > MERGESORT_INPLACE_THRESHOLD && j-k > MERGESORT_INPLACE_THRESHOLD)
 		MergeSortMergeInPlace(A, l, k, j, true, true);
 	else
 		MergeSortMergeSmall(A, l, k, j, true);
