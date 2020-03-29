@@ -84,6 +84,28 @@ void CombSort(class SortArray& a);
 void GnomeSort(class SortArray& a);
 void OddEvenSort(class SortArray& a);
 
+wxArrayString ShellSortIncrementText();
+
+enum ShellSortIncrementType {
+    SHELL_1959_SHELL,
+    SHELL_1960_FRANK,
+    SHELL_1963_HIBBARD,
+    SHELL_1965_PAPERNOV,
+    SHELL_1971_PRATT,
+    SHELL_1973_KNUTH,
+    SHELL_1982_SEDGEWICK,
+    SHELL_1985_INCERPI,
+    SHELL_1986_SEDGEWICK,
+    SHELL_1991_GONNET,
+    SHELL_1992_TOKUDA,
+    SHELL_2001_CIURA,
+    SHELL_FIBONACCI,
+    SHELL_ROOT5_COPRIME,
+    SHELL_E_COPRIME,
+    SHELL_PI_COPRIME
+};
+extern ShellSortIncrementType g_shellsort_increment;
+
 void ShellSort(SortArray& a);
 void HeapSort(class SortArray& a);
 void SmoothSort(class SortArray& a);
