@@ -36,10 +36,10 @@
 
 /// custom assertion (also active in release mode)
 #define ASSERT(cond) do { if (!(cond)) {                \
-    wxLogError(_("Assertion failed:\n%s in %s:%d"),     \
-               _T(#cond), _T(__FILE__), __LINE__);      \
-    wxLog::FlushActive();                               \
-    abort();                                            \
+	wxLogError(_("Assertion failed:\n%s in %s:%d"),     \
+			   _T(#cond), _T(__FILE__), __LINE__);      \
+	wxLog::FlushActive();                               \
+	abort();                                            \
 } } while(0)
 
 // ----------------------------------------------------------------------------
@@ -54,69 +54,69 @@ extern size_t       g_access_count;
 class ArrayItem
 {
 public:
-    typedef int value_type;
+	typedef int value_type;
 
 protected:
-    value_type     value;
+	value_type     value;
 
 public:
-    ArrayItem() {}
+	ArrayItem() {}
 
-    explicit ArrayItem(const value_type& d) : value(d) {}
+	explicit ArrayItem(const value_type& d) : value(d) {}
 
-    ArrayItem(const ArrayItem& v) : value(v.value) {}
+	ArrayItem(const ArrayItem& v) : value(v.value) {}
 
-    // ArrayItem has no implicit data cast, because most sorting algorithms use
-    // comparisons. However, radix sort and similar use the following data
-    // accessor. To add sound for these, we use a separate callback.
-    const value_type& get() const
-    { OnAccess(*this); return value; }
+	// ArrayItem has no implicit data cast, because most sorting algorithms use
+	// comparisons. However, radix sort and similar use the following data
+	// accessor. To add sound for these, we use a separate callback.
+	const value_type& get() const
+	{ OnAccess(*this); return value; }
 
-    static void OnAccess(const ArrayItem& a);
+	static void OnAccess(const ArrayItem& a);
 
-    // for direct data access by visualizer
-    const value_type& get_direct() const
-    { return value; }
+	// for direct data access by visualizer
+	const value_type& get_direct() const
+	{ return value; }
 
-    // *** comparisons
+	// *** comparisons
 
-    bool operator== (const ArrayItem& v) const
-    { OnComparison(*this,v); return (value == v.value); }
+	bool operator== (const ArrayItem& v) const
+	{ OnComparison(*this,v); return (value == v.value); }
 
-    bool operator!= (const ArrayItem& v) const
-    { OnComparison(*this,v); return (value != v.value); }
+	bool operator!= (const ArrayItem& v) const
+	{ OnComparison(*this,v); return (value != v.value); }
 
-    bool operator< (const ArrayItem& v) const
-    { OnComparison(*this,v); return (value < v.value); }
+	bool operator< (const ArrayItem& v) const
+	{ OnComparison(*this,v); return (value < v.value); }
 
-    bool operator<= (const ArrayItem& v) const
-    { OnComparison(*this,v); return (value <= v.value); }
+	bool operator<= (const ArrayItem& v) const
+	{ OnComparison(*this,v); return (value <= v.value); }
 
-    bool operator> (const ArrayItem& v) const
-    { OnComparison(*this,v); return (value > v.value); }
+	bool operator> (const ArrayItem& v) const
+	{ OnComparison(*this,v); return (value > v.value); }
 
-    bool operator>= (const ArrayItem& v) const
-    { OnComparison(*this,v); return (value >= v.value); }
+	bool operator>= (const ArrayItem& v) const
+	{ OnComparison(*this,v); return (value >= v.value); }
 
-    // ternary comparison which counts just one
-    int cmp(const ArrayItem& v) const
-    {
-        OnComparison(*this,v);
-        return (value == v.value ? 0 : value < v.value ? -1 : +1);
-    }
+	// ternary comparison which counts just one
+	int cmp(const ArrayItem& v) const
+	{
+		OnComparison(*this,v);
+		return (value == v.value ? 0 : value < v.value ? -1 : +1);
+	}
 
-    // *** comparisons without sound, counting or delay
+	// *** comparisons without sound, counting or delay
 
-    bool equal_direct(const ArrayItem& v) const
-    { return (value == v.value); }
+	bool equal_direct(const ArrayItem& v) const
+	{ return (value == v.value); }
 
-    bool less_direct(const ArrayItem& v) const
-    { return (value < v.value); }
+	bool less_direct(const ArrayItem& v) const
+	{ return (value < v.value); }
 
-    bool greater_direct(const ArrayItem& v) const
-    { return (value > v.value); }
+	bool greater_direct(const ArrayItem& v) const
+	{ return (value > v.value); }
 
-    static void OnComparison(const ArrayItem& a, const ArrayItem& b);
+	static void OnComparison(const ArrayItem& a, const ArrayItem& b);
 };
 
 // ----------------------------------------------------------------------------
@@ -125,8 +125,8 @@ class SortDelay
 {
 public:
 
-    /// central access function called by each array access of the algorithms
-    virtual void OnAccess() = 0;
+	/// central access function called by each array access of the algorithms
+	virtual void OnAccess() = 0;
 };
 
 // ----------------------------------------------------------------------------
@@ -134,322 +134,322 @@ public:
 class SortArray
 {
 protected:
-    // *** Displayed Array Data
+	// *** Displayed Array Data
 
-    /// the array data
-    std::vector<ArrayItem>     m_array;
+	/// the array data
+	std::vector<ArrayItem>     m_array;
 
-    /// maximum value in array for scaling display
-    ArrayItem::value_type      m_array_max;
+	/// maximum value in array for scaling display
+	ArrayItem::value_type      m_array_max;
 
-    /// disable calculating of inversions
-    bool m_calc_inversions;
+	/// disable calculating of inversions
+	bool m_calc_inversions;
 
-    /// the number of inversions in the array order
-    ssize_t m_inversions;
+	/// the number of inversions in the array order
+	ssize_t m_inversions;
 
-    /// access touch color
-    struct Access
-    {
-        unsigned int index;
-        unsigned short color;
-        unsigned short sustain;
-        unsigned short priority;
+	/// access touch color
+	struct Access
+	{
+		unsigned int index;
+		unsigned short color;
+		unsigned short sustain;
+		unsigned short priority;
 
-        Access(size_t i=0, unsigned short c=1,
-               unsigned short s=0, unsigned short p=0)
-            : index(i), color(c), sustain(s), priority(p) { }
-    };
+		Access(size_t i=0, unsigned short c=1,
+			   unsigned short s=0, unsigned short p=0)
+			: index(i), color(c), sustain(s), priority(p) { }
+	};
 
-    /// position of very last get/set accesses (two for swaps)
-    Access      m_access1, m_access2;
+	/// position of very last get/set accesses (two for swaps)
+	Access      m_access1, m_access2;
 
-    /// array of get/set accesses since last paint event
-    std::vector<Access> m_access_list;
+	/// array of get/set accesses since last paint event
+	std::vector<Access> m_access_list;
 
-    /// custom markers in the array, set by algorithm
-    std::vector<unsigned char>   m_mark;
+	/// custom markers in the array, set by algorithm
+	std::vector<unsigned char>   m_mark;
 
-    /// custom watched index pointers in the array, set by algorithm
-    std::vector< std::pair<volatile ssize_t*,unsigned char> > m_watch;
+	/// custom watched index pointers in the array, set by algorithm
+	std::vector< std::pair<volatile ssize_t*,unsigned char> > m_watch;
 
-    /// flag for sorted array
-    bool        m_is_sorted;
+	/// flag for sorted array
+	bool        m_is_sorted;
 
-    /// pointer to delay function
-    SortDelay*  m_delay;
-
-public:
-    /// mutex for accesses and watch items
-    wxMutex     m_mutex;
-
-    // *** Array Functions
+	/// pointer to delay function
+	SortDelay*  m_delay;
 
 public:
-    /// constructor
-    SortArray();
+	/// mutex for accesses and watch items
+	wxMutex     m_mutex;
 
-    /// Set pointer to delay functional
-    void SetSortDelay(SortDelay* delay) { m_delay = delay; }
-
-    /// called by main when an algorithm starts
-    void OnAlgoLaunch(const struct AlgoEntry& ae);
-
-    /// turn on/off calculation of inversions
-    void SetCalcInversions(bool on);
-
-    /// toggle boolean to calculate inversions
-    void ToggleCalcInversions();
-
-    /// fill the array with one of the predefined data templates
-    void FillData(unsigned int schema, size_t arraysize);
-
-    /// fill an array of strings with the list of predefined data templates
-    static void FillInputlist(wxArrayString& list);
-
-    /// return whether the array was sorted
-    bool IsSorted() const { return m_is_sorted; }
-
-    /// central access function called by each array access of the algorithms
-    void OnAccess();
-
-    /// check array after sorting algorithm
-    bool CheckSorted();
-
-    /// return the number of inversions in the array
-    ssize_t GetInversions() const
-    { return m_inversions; }
-
-    /// calculate the number of runs in the array
-    size_t GetRuns() const;
+	// *** Array Functions
 
 public:
-    /// reset the array to the given size
-    void ResetArray(size_t size);
+	/// constructor
+	SortArray();
 
-    /// called when the data fill function is finished
-    void FinishFill();
+	/// Set pointer to delay functional
+	void SetSortDelay(SortDelay* delay) { m_delay = delay; }
 
-    /// save access to array, forwards to sound system
-    void SaveAccess(size_t i);
+	/// called by main when an algorithm starts
+	void OnAlgoLaunch(const struct AlgoEntry& ae);
 
-    /// check if index matches one of the watched pointers
-    short InAccessList(ssize_t idx);
+	/// turn on/off calculation of inversions
+	void SetCalcInversions(bool on);
 
-    /// check if index matches one of the watched pointers
-    unsigned short InWatchList(ssize_t idx) const;
+	/// toggle boolean to calculate inversions
+	void ToggleCalcInversions();
 
-    /// Calculate the current color of the index i
-    int GetIndexColor(size_t idx);
+	/// fill the array with one of the predefined data templates
+	void FillData(unsigned int schema, size_t arraysize);
 
-    /// recalculate the number of inversions (in quadratic time)
-    void RecalcInversions();
+	/// fill an array of strings with the list of predefined data templates
+	static void FillInputlist(wxArrayString& list);
 
-    // update inversion count by calculating delta linearly for a swap
-    void UpdateInversions(size_t i, size_t j);
+	/// return whether the array was sorted
+	bool IsSorted() const { return m_is_sorted; }
+
+	/// central access function called by each array access of the algorithms
+	void OnAccess();
+
+	/// check array after sorting algorithm
+	bool CheckSorted();
+
+	/// return the number of inversions in the array
+	ssize_t GetInversions() const
+	{ return m_inversions; }
+
+	/// calculate the number of runs in the array
+	size_t GetRuns() const;
 
 public:
-    /// return array size
-    size_t size() const { return m_array.size(); }
+	/// reset the array to the given size
+	void ResetArray(size_t size);
 
-    /// return highest element value in array
-    const ArrayItem::value_type& array_max() const
-    { return m_array_max; }
+	/// called when the data fill function is finished
+	void FinishFill();
 
-    /// Return an item of the array (bypassing sound, counting and delay)
-    const ArrayItem& direct(size_t i) const
-    {
-        ASSERT(i < m_array.size());
-        return m_array[i];
-    }
+	/// save access to array, forwards to sound system
+	void SaveAccess(size_t i);
 
-    /// Return an item of the array (yields counting and delay)
-    const ArrayItem& operator[](size_t i)
-    {
-        ASSERT(i < m_array.size());
+	/// check if index matches one of the watched pointers
+	short InAccessList(ssize_t idx);
 
-        if (m_access1.index != i)
-        {
-            {
-                wxMutexLocker lock(m_mutex);
-                ASSERT(lock.IsOk());
+	/// check if index matches one of the watched pointers
+	unsigned short InWatchList(ssize_t idx) const;
 
-                m_access1 = i;
-                m_access_list.push_back(i);
-            }
+	/// Calculate the current color of the index i
+	int GetIndexColor(size_t idx);
 
-            // skip wait for duplicate accesses
-            OnAccess();
-        }
+	/// recalculate the number of inversions (in quadratic time)
+	void RecalcInversions();
 
-        return m_array[i];
-    }
+	// update inversion count by calculating delta linearly for a swap
+	void UpdateInversions(size_t i, size_t j);
 
-    /// Return a mutable item of the array (yields counting and delay)
-    ArrayItem& get_mutable(size_t i)
-    {
-        ASSERT(i < m_array.size());
+public:
+	/// return array size
+	size_t size() const { return m_array.size(); }
 
-        if (m_access1.index != i)
-        {
-            {
-                wxMutexLocker lock(m_mutex);
-                ASSERT(lock.IsOk());
+	/// return highest element value in array
+	const ArrayItem::value_type& array_max() const
+	{ return m_array_max; }
 
-                m_access1 = i;
-                m_access_list.push_back(i);
-            }
+	/// Return an item of the array (bypassing sound, counting and delay)
+	const ArrayItem& direct(size_t i) const
+	{
+		ASSERT(i < m_array.size());
+		return m_array[i];
+	}
 
-            // skip wait for duplicate accesses
-            OnAccess();
-        }
+	/// Return an item of the array (yields counting and delay)
+	const ArrayItem& operator[](size_t i)
+	{
+		ASSERT(i < m_array.size());
 
-        RecalcInversions();
-        return m_array[i];
-    }
+		if (m_access1.index != i)
+		{
+			{
+				wxMutexLocker lock(m_mutex);
+				ASSERT(lock.IsOk());
 
-    /// Return an item of the array (yields delay, but no counting)
-    const ArrayItem& get_nocount(size_t i)
-    {
-        ASSERT(i < m_array.size());
+				m_access1 = i;
+				m_access_list.push_back(i);
+			}
 
-        if (m_access1.index != i)
-        {
-            {
-                wxMutexLocker lock(m_mutex);
-                ASSERT(lock.IsOk());
+			// skip wait for duplicate accesses
+			OnAccess();
+		}
 
-                m_access1 = i;
-                m_access_list.push_back(i);
-            }
+		return m_array[i];
+	}
 
-            // skip wait for duplicate accesses
-            --g_access_count;
-            OnAccess();
-        }
+	/// Return a mutable item of the array (yields counting and delay)
+	ArrayItem& get_mutable(size_t i)
+	{
+		ASSERT(i < m_array.size());
 
-        return m_array[i];
-    }
+		if (m_access1.index != i)
+		{
+			{
+				wxMutexLocker lock(m_mutex);
+				ASSERT(lock.IsOk());
 
-    /// Set an item of the array: first set then yield sound, counting and delay.
-    void set(size_t i, const ArrayItem& v)
-    {
-        ASSERT(i < m_array.size());
+				m_access1 = i;
+				m_access_list.push_back(i);
+			}
 
-        {
-            wxMutexLocker lock(m_mutex);
-            ASSERT(lock.IsOk());
+			// skip wait for duplicate accesses
+			OnAccess();
+		}
 
-            m_access1 = i;
-            m_access_list.push_back(i);
+		RecalcInversions();
+		return m_array[i];
+	}
 
-            m_array[i] = v;
-        }
+	/// Return an item of the array (yields delay, but no counting)
+	const ArrayItem& get_nocount(size_t i)
+	{
+		ASSERT(i < m_array.size());
 
-        RecalcInversions();
-        OnAccess();
-    }
+		if (m_access1.index != i)
+		{
+			{
+				wxMutexLocker lock(m_mutex);
+				ASSERT(lock.IsOk());
 
-    /// Special function to swap the value in the array, this method provides a
-    /// special visualization for this operation.
-    void swap(size_t i, size_t j)
-    {
-        ASSERT(i < m_array.size());
-        ASSERT(j < m_array.size());
+				m_access1 = i;
+				m_access_list.push_back(i);
+			}
 
-        {
-            wxMutexLocker lock(m_mutex);
-            ASSERT(lock.IsOk());
+			// skip wait for duplicate accesses
+			--g_access_count;
+			OnAccess();
+		}
 
-            m_access1 = i;
-            m_access2 = j;
+		return m_array[i];
+	}
 
-            m_access_list.push_back(i);
-            m_access_list.push_back(j);
-        }
+	/// Set an item of the array: first set then yield sound, counting and delay.
+	void set(size_t i, const ArrayItem& v)
+	{
+		ASSERT(i < m_array.size());
 
-        UpdateInversions(i, j); // update inversion count
+		{
+			wxMutexLocker lock(m_mutex);
+			ASSERT(lock.IsOk());
 
-        OnAccess();
-        std::swap(m_array[i], m_array[j]);
-        OnAccess();
-        m_access2 = -1;
-    }
+			m_access1 = i;
+			m_access_list.push_back(i);
 
-    /// Touch an item of the array: set color till next frame is outputted.
-    void touch(size_t i, int color = 2,
-               unsigned short sustain = 0, unsigned short priority = 0)
-    {
-        ASSERT(i < m_array.size());
+			m_array[i] = v;
+		}
 
-        {
-            wxMutexLocker lock(m_mutex);
-            ASSERT(lock.IsOk());
+		RecalcInversions();
+		OnAccess();
+	}
 
-            m_access1 = Access(i, color, sustain, priority);
-            m_access_list.push_back( Access(i, color, sustain, priority) );
-        }
-    }
+	/// Special function to swap the value in the array, this method provides a
+	/// special visualization for this operation.
+	void swap(size_t i, size_t j)
+	{
+		ASSERT(i < m_array.size());
+		ASSERT(j < m_array.size());
 
-    /// Mark an array index with a color.
-    void mark(size_t i, int color = 2)
-    {
-        ASSERT(i < m_array.size());
-        m_mark[i] = color;
-    }
+		{
+			wxMutexLocker lock(m_mutex);
+			ASSERT(lock.IsOk());
 
-    /// Get mark, without dynamic effects
-    int get_mark(size_t i)
-    {
-        ASSERT(i < m_array.size());
-    	return m_mark[i];
-    }
+			m_access1 = i;
+			m_access2 = j;
 
-    /// Swap color for two array indexes.
-    void mark_swap(size_t i, size_t j)
-    {
-        ASSERT(i < m_array.size());
-        ASSERT(j < m_array.size());
+			m_access_list.push_back(i);
+			m_access_list.push_back(j);
+		}
 
-        std::swap(m_mark[i], m_mark[j]);
-    }
+		UpdateInversions(i, j); // update inversion count
 
-    /// Unmark an array index.
-    void unmark(size_t i)
-    {
-        ASSERT(i < m_array.size());
-        m_mark[i] = 0;
-    }
+		OnAccess();
+		std::swap(m_array[i], m_array[j]);
+		OnAccess();
+		m_access2 = -1;
+	}
 
-    /// Unmark all array indexes.
-    void unmark_all()
-    {
-        m_access1 = m_access2 = -1;
-        std::fill(m_mark.begin(), m_mark.end(), 0);
+	/// Touch an item of the array: set color till next frame is outputted.
+	void touch(size_t i, int color = 2,
+			   unsigned short sustain = 0, unsigned short priority = 0)
+	{
+		ASSERT(i < m_array.size());
 
-        wxMutexLocker lock(m_mutex);
-        ASSERT(lock.IsOk());
-        m_access_list.clear();
-    }
+		{
+			wxMutexLocker lock(m_mutex);
+			ASSERT(lock.IsOk());
 
-    /// Highly experimental method to _track_ array live indexes. For this, the
-    /// index must be marked volatile!.
-    void watch(volatile ssize_t* idxptr, unsigned char color = 2)
-    {
-        wxMutexLocker lock(m_mutex);
-        ASSERT(lock.IsOk());
+			m_access1 = Access(i, color, sustain, priority);
+			m_access_list.push_back( Access(i, color, sustain, priority) );
+		}
+	}
 
-        m_watch.push_back( std::make_pair(idxptr,color) );
-    }
+	/// Mark an array index with a color.
+	void mark(size_t i, int color = 2)
+	{
+		ASSERT(i < m_array.size());
+		m_mark[i] = color;
+	}
 
-    /// Release all tracked live array indexes.
-    void unwatch_all()
-    {
-        wxMutexLocker lock(m_mutex);
-        ASSERT(lock.IsOk());
+	/// Get mark, without dynamic effects
+	int get_mark(size_t i)
+	{
+		ASSERT(i < m_array.size());
+		return m_mark[i];
+	}
 
-        m_watch.clear();
-    }
+	/// Swap color for two array indexes.
+	void mark_swap(size_t i, size_t j)
+	{
+		ASSERT(i < m_array.size());
+		ASSERT(j < m_array.size());
+
+		std::swap(m_mark[i], m_mark[j]);
+	}
+
+	/// Unmark an array index.
+	void unmark(size_t i)
+	{
+		ASSERT(i < m_array.size());
+		m_mark[i] = 0;
+	}
+
+	/// Unmark all array indexes.
+	void unmark_all()
+	{
+		m_access1 = m_access2 = -1;
+		std::fill(m_mark.begin(), m_mark.end(), 0);
+
+		wxMutexLocker lock(m_mutex);
+		ASSERT(lock.IsOk());
+		m_access_list.clear();
+	}
+
+	/// Highly experimental method to _track_ array live indexes. For this, the
+	/// index must be marked volatile!.
+	void watch(volatile ssize_t* idxptr, unsigned char color = 2)
+	{
+		wxMutexLocker lock(m_mutex);
+		ASSERT(lock.IsOk());
+
+		m_watch.push_back( std::make_pair(idxptr,color) );
+	}
+
+	/// Release all tracked live array indexes.
+	void unwatch_all()
+	{
+		wxMutexLocker lock(m_mutex);
+		ASSERT(lock.IsOk());
+
+		m_watch.clear();
+	}
 };
 
 // ----------------------------------------------------------------------------

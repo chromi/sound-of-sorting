@@ -37,13 +37,13 @@
 
 struct AlgoEntry
 {
-    wxString name;
-    void (*func)(class SortArray&);
-    // maximum item count for test runs
-    unsigned int max_testsize;
-    // count inversions if n <= limit
-    unsigned int inversion_count_limit;
-    wxString text;
+	wxString name;
+	void (*func)(class SortArray&);
+	// maximum item count for test runs
+	unsigned int max_testsize;
+	// count inversions if n <= limit
+	unsigned int inversion_count_limit;
+	wxString text;
 };
 
 extern const struct AlgoEntry g_algolist[];
@@ -54,13 +54,17 @@ extern const struct AlgoEntry* g_algolist_end;
 
 void SelectionSort(class SortArray& a);
 void DualSelectionSort(class SortArray& a);
+void CycleSort(class SortArray& a);
+
 void InsertionSort(class SortArray& a);
 void BinaryInsertionSort(class SortArray& a);
+void ShellSort(SortArray& a);
 
 void MergeSort(class SortArray& a);
 void MergeSortIterative(class SortArray& a);
 void MergeSortInPlace(class SortArray& a);
 void MergeSortSemiInPlace(class SortArray& a);
+void SplayMergeSort(class SortArray& a);
 
 void CataMergeSort(class SortArray& a);
 void CataMergeSortStable(class SortArray& a);
@@ -87,28 +91,30 @@ void OddEvenSort(class SortArray& a);
 wxArrayString ShellSortIncrementText();
 
 enum ShellSortIncrementType {
-    SHELL_1959_SHELL,
-    SHELL_1960_FRANK,
-    SHELL_1963_HIBBARD,
-    SHELL_1965_PAPERNOV,
-    SHELL_1971_PRATT,
-    SHELL_1973_KNUTH,
-    SHELL_1982_SEDGEWICK,
-    SHELL_1985_INCERPI,
-    SHELL_1986_SEDGEWICK,
-    SHELL_1991_GONNET,
-    SHELL_1992_TOKUDA,
-    SHELL_2001_CIURA,
-    SHELL_FIBONACCI,
-    SHELL_ROOT5_COPRIME,
-    SHELL_E_COPRIME,
-    SHELL_PI_COPRIME
+	SHELL_1959_SHELL,
+	SHELL_1960_FRANK,
+	SHELL_1963_HIBBARD,
+	SHELL_1965_PAPERNOV,
+	SHELL_1971_PRATT,
+	SHELL_1973_KNUTH,
+	SHELL_1982_SEDGEWICK,
+	SHELL_1985_INCERPI,
+	SHELL_1986_SEDGEWICK,
+	SHELL_1991_GONNET,
+	SHELL_1992_TOKUDA,
+	SHELL_2001_CIURA,
+	SHELL_FIBONACCI,
+	SHELL_ROOT5_COPRIME,
+	SHELL_E_COPRIME,
+	SHELL_PI_COPRIME
 };
 extern ShellSortIncrementType g_shellsort_increment;
 
-void ShellSort(SortArray& a);
 void HeapSort(class SortArray& a);
 void SmoothSort(class SortArray& a);
+void SplaySort(class SortArray& a);
+void SplaySort(class SortArray& A, size_t l, size_t r);
+void SplayShakeSort(class SortArray& a);
 
 void BitonicSort(SortArray& a);
 void BitonicSortNetwork(SortArray& a);
@@ -129,8 +135,6 @@ void BozoSort(class SortArray& a);
 void StoogeSort(class SortArray& a);
 void SlowSort(class SortArray& a);
 
-void CycleSort(class SortArray& a);
-
 // ****************************************************************************
 // *** Iterator Adapter
 
@@ -139,84 +143,84 @@ void CycleSort(class SortArray& a);
 class MyIterator : public std::iterator<std::random_access_iterator_tag, ArrayItem>
 {
 protected:
-    SortArray*  m_array;
-    size_t      m_pos;
+	SortArray*  m_array;
+	size_t      m_pos;
 
 public:
-    typedef std::iterator<std::random_access_iterator_tag, ArrayItem> base_type;
+	typedef std::iterator<std::random_access_iterator_tag, ArrayItem> base_type;
 
-    typedef std::random_access_iterator_tag iterator_category;
+	typedef std::random_access_iterator_tag iterator_category;
 
-    typedef base_type::value_type value_type;
-    typedef base_type::difference_type difference_type;
-    typedef base_type::reference reference;
-    typedef base_type::pointer pointer;
+	typedef base_type::value_type value_type;
+	typedef base_type::difference_type difference_type;
+	typedef base_type::reference reference;
+	typedef base_type::pointer pointer;
 
-    MyIterator() : m_array(NULL), m_pos(0) {}
+	MyIterator() : m_array(NULL), m_pos(0) {}
 
-    MyIterator(SortArray* A, size_t p) : m_array(A), m_pos(p) {}
+	MyIterator(SortArray* A, size_t p) : m_array(A), m_pos(p) {}
 
-    MyIterator(const MyIterator& r) : m_array(r.m_array), m_pos(r.m_pos) {}
+	MyIterator(const MyIterator& r) : m_array(r.m_array), m_pos(r.m_pos) {}
 
-    MyIterator& operator=(const MyIterator& r)
-    { m_array = r.m_array, m_pos = r.m_pos; return *this; }
+	MyIterator& operator=(const MyIterator& r)
+	{ m_array = r.m_array, m_pos = r.m_pos; return *this; }
 
-    MyIterator& operator++()
-    { ++m_pos; return *this; }
+	MyIterator& operator++()
+	{ ++m_pos; return *this; }
 
-    MyIterator& operator--()
-    { --m_pos; return *this; }
+	MyIterator& operator--()
+	{ --m_pos; return *this; }
 
-    MyIterator operator++(int)
-    { return MyIterator(m_array, m_pos++); }
+	MyIterator operator++(int)
+	{ return MyIterator(m_array, m_pos++); }
 
-    MyIterator operator--(int)
-    { return MyIterator(m_array, m_pos--); }
+	MyIterator operator--(int)
+	{ return MyIterator(m_array, m_pos--); }
 
-    MyIterator operator+(const difference_type& n) const
-    { return MyIterator(m_array, m_pos + n); }
+	MyIterator operator+(const difference_type& n) const
+	{ return MyIterator(m_array, m_pos + n); }
 
-    MyIterator& operator+=(const difference_type& n)
-    { m_pos += n; return *this; }
+	MyIterator& operator+=(const difference_type& n)
+	{ m_pos += n; return *this; }
 
-    MyIterator operator-(const difference_type& n) const
-    { return MyIterator(m_array, m_pos - n); }
+	MyIterator operator-(const difference_type& n) const
+	{ return MyIterator(m_array, m_pos - n); }
 
-    MyIterator& operator-=(const difference_type& n)
-    { m_pos -= n; return *this; }
+	MyIterator& operator-=(const difference_type& n)
+	{ m_pos -= n; return *this; }
 
-    reference operator*() const
-    { return m_array->get_mutable(m_pos); }
+	reference operator*() const
+	{ return m_array->get_mutable(m_pos); }
 
-    pointer operator->() const
-    { return &(m_array->get_mutable(m_pos)); }
+	pointer operator->() const
+	{ return &(m_array->get_mutable(m_pos)); }
 
-    reference operator[](const difference_type& n) const
-    { return m_array->get_mutable(m_pos + n); }
+	reference operator[](const difference_type& n) const
+	{ return m_array->get_mutable(m_pos + n); }
 
-    bool operator==(const MyIterator& r)
-    { return (m_array == r.m_array) && (m_pos == r.m_pos); }
+	bool operator==(const MyIterator& r)
+	{ return (m_array == r.m_array) && (m_pos == r.m_pos); }
 
-    bool operator!=(const MyIterator& r)
-    { return (m_array != r.m_array) || (m_pos != r.m_pos); }
+	bool operator!=(const MyIterator& r)
+	{ return (m_array != r.m_array) || (m_pos != r.m_pos); }
 
-    bool operator<(const MyIterator& r)
-    { return (m_array == r.m_array ? (m_pos < r.m_pos) : (m_array < r.m_array)); }
+	bool operator<(const MyIterator& r)
+	{ return (m_array == r.m_array ? (m_pos < r.m_pos) : (m_array < r.m_array)); }
 
-    bool operator>(const MyIterator& r)
-    { return (m_array == r.m_array ? (m_pos > r.m_pos) : (m_array > r.m_array)); }
+	bool operator>(const MyIterator& r)
+	{ return (m_array == r.m_array ? (m_pos > r.m_pos) : (m_array > r.m_array)); }
 
-    bool operator<=(const MyIterator& r)
-    { return (m_array == r.m_array ? (m_pos <= r.m_pos) : (m_array <= r.m_array)); }
+	bool operator<=(const MyIterator& r)
+	{ return (m_array == r.m_array ? (m_pos <= r.m_pos) : (m_array <= r.m_array)); }
 
-    bool operator>=(const MyIterator& r)
-    { return (m_array == r.m_array ? (m_pos >= r.m_pos) : (m_array >= r.m_array)); }
+	bool operator>=(const MyIterator& r)
+	{ return (m_array == r.m_array ? (m_pos >= r.m_pos) : (m_array >= r.m_array)); }
 
-    difference_type operator+(const MyIterator& r2) const
-    { ASSERT(m_array == r2.m_array); return (m_pos + r2.m_pos); }
+	difference_type operator+(const MyIterator& r2) const
+	{ ASSERT(m_array == r2.m_array); return (m_pos + r2.m_pos); }
 
-    difference_type operator-(const MyIterator& r2) const
-    { ASSERT(m_array == r2.m_array); return (m_pos - r2.m_pos); }
+	difference_type operator-(const MyIterator& r2) const
+	{ ASSERT(m_array == r2.m_array); return (m_pos - r2.m_pos); }
 };
 
 
