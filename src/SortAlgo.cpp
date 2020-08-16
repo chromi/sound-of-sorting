@@ -663,7 +663,7 @@ void MergeSortMergeInPlace(SortArray& A, const size_t l, const size_t m, const s
 
 void MergeSortInPlace(SortArray& A, const size_t l, const size_t r, const SmallOpt smallOpt)
 {
-	const size_t beginSize = (smallOpt == SMALL_SPLAY) ? std::min(r-l+1, 64UL)/2 : 1;
+	const size_t beginSize = (smallOpt == SMALL_SPLAY) ? std::min(r-l+1, (size_t) 64)/2 : 1;
 
 	// Iterative mergesort.
 	for(size_t s=beginSize; s && s < (r-l); s *= 2) {
