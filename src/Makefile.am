@@ -24,7 +24,7 @@ sorting_test_SOURCES = \
 	SortTest.cpp \
 	$(COMMON)
 
-AM_CXXFLAGS = -W -Wall @WX_CXXFLAGS@ @SDL_CFLAGS@
+AM_CXXFLAGS = -W -Wall @WX_CXXFLAGS@ @SDL_CFLAGS@ -Wno-deprecated-copy
 LDADD = @WX_LIBS@ @SDL_LIBS@
 
 if GOT_RESCOMP

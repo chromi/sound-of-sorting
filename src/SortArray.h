@@ -245,6 +245,10 @@ public:
 	/// recalculate the number of inversions (in quadratic time)
 	void RecalcInversions();
 
+	// update inversion count by calculating delta linearly for a replacement
+	void AddInversions(size_t i);
+	void DelInversions(size_t i);
+
 	// update inversion count by calculating delta linearly for a swap
 	void UpdateInversions(size_t i, size_t j);
 
@@ -304,7 +308,7 @@ public:
 			OnAccess();
 		}
 
-		RecalcInversions();
+		// RecalcInversions();
 		return m_array[i];
 	}
 
@@ -336,6 +340,8 @@ public:
 	{
 		ASSERT(i < m_array.size());
 
+		DelInversions(i);
+
 		{
 			wxMutexLocker lock(m_mutex);
 			ASSERT(lock.IsOk());
@@ -346,7 +352,7 @@ public:
 			m_array[i] = v;
 		}
 
-		RecalcInversions();
+		AddInversions(i);
 		OnAccess();
 	}
 

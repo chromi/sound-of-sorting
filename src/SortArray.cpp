@@ -355,6 +355,52 @@ void SortArray::RecalcInversions()
 	m_inversions = inversions;
 }
 
+void SortArray::AddInversions(size_t i)
+{
+	if (!m_calc_inversions) {
+		m_inversions = -1;
+		return;
+	}
+
+	unsigned int inversions = 0;
+	const ArrayItem& a = direct(i);
+
+	for (size_t j = i+1; j < size(); ++j)
+	{
+		const ArrayItem& b = direct(j);
+
+		if ( a.greater_direct(b) )
+		{
+			inversions++;
+		}
+	}
+
+	m_inversions += inversions;
+}
+
+void SortArray::DelInversions(size_t i)
+{
+	if (!m_calc_inversions) {
+		m_inversions = -1;
+		return;
+	}
+
+	unsigned int inversions = 0;
+	const ArrayItem& a = direct(i);
+
+	for (size_t j = i+1; j < size(); ++j)
+	{
+		const ArrayItem& b = direct(j);
+
+		if ( a.greater_direct(b) )
+		{
+			inversions++;
+		}
+	}
+
+	m_inversions -= inversions;
+}
+
 void SortArray::UpdateInversions(size_t i, size_t j)
 {
 	if (!m_calc_inversions) {
