@@ -101,8 +101,10 @@ public:
 	{ OnComparison(*this,v); return (value >= v.value); }
 
 	// ternary comparison which counts just one
-	int cmp(const ArrayItem& v) const
-	{
+	int cmp_direct(const ArrayItem& v) const {
+		return (value == v.value ? 0 : value < v.value ? -1 : +1);
+	}
+	int cmp(const ArrayItem& v) const {
 		OnComparison(*this,v);
 		return (value == v.value ? 0 : value < v.value ? -1 : +1);
 	}
@@ -247,8 +249,13 @@ public:
 	/// recalculate the number of inversions (in quadratic time)
 	void RecalcInversions();
 
+	// update inversion count by calculating delta linearly for a replacement
+	void AddInversions(size_t i);
+	void DelInversions(size_t i);
+
 	// update inversion count by calculating delta linearly for a swap
 	void UpdateInversions(size_t i, size_t j);
+	void RotateInversions(size_t i, size_t j, size_t k);
 
 public:
 	/// return array size
@@ -306,7 +313,8 @@ public:
 			OnAccess();
 		}
 
-		RecalcInversions();
+		m_inversions = -1;	// can't predict what caller will do here
+
 		return m_array[i];
 	}
 
@@ -338,6 +346,8 @@ public:
 	{
 		ASSERT(i < m_array.size());
 
+		DelInversions(i);
+
 		{
 			wxMutexLocker lock(m_mutex);
 			ASSERT(lock.IsOk());
@@ -348,7 +358,7 @@ public:
 			m_array[i] = v;
 		}
 
-		RecalcInversions();
+		AddInversions(i);
 		OnAccess();
 	}
 
@@ -376,6 +386,59 @@ public:
 		std::swap(m_array[i], m_array[j]);
 		OnAccess();
 		m_access2 = -1;
+	}
+
+	/// Special function to efficiently swap two adjacent blocks in the array.
+	/// This also swaps the marks associated with these values.
+	/// This requires N array writes, half as many as using swaps.
+	void rotate(size_t l, size_t m, size_t r)
+	{
+		const size_t b = m-l, a = r-m;
+		if(!a || !b) return;
+
+		RotateInversions(l,m,r);	// update inversion count
+
+		if(a == b) {
+			// blocks of equal size can simply be swapped
+			for(size_t i=l, j=m; j < r; i++,j++) {
+				m_access_list.push_back(i);
+				m_access_list.push_back(j);
+				OnAccess();
+				std::swap(m_array[i], m_array[j]);
+				std::swap(m_mark [i], m_mark [j]);
+				OnAccess();
+			}
+		} else {
+			// blocks of unequal size need to be "rotated"
+			// compute GCD and LCM of block sizes
+			size_t c=a, d=b;
+			while(d) {
+				size_t e = c % d;
+				c = d;
+				d = e;
+			}
+			d = (a+b)/c;
+
+			for(size_t i=0; i < c; i++) {
+				size_t x = (a+i)%(a+b);
+
+				// conventionally, we would pull this first value into a temporary
+				// instead, we'll just drag it along with swaps
+				m_access_list.push_back(x+l);
+				OnAccess();
+
+				for(size_t j=1; j < d; j++) {
+					size_t y = (x+b)%(a+b);
+
+					std::swap(m_array[x+l], m_array[y+l]);
+					std::swap(m_mark [x+l], m_mark [y+l]);
+
+					m_access_list.push_back(y+l);
+					OnAccess();
+					x = y;
+				}
+			}
+		}
 	}
 
 	/// Touch an item of the array: set color till next frame is outputted.
