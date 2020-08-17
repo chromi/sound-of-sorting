@@ -365,14 +365,12 @@ void SortArray::AddInversions(size_t i)
 	unsigned int inversions = 0;
 	const ArrayItem& a = direct(i);
 
-	for (size_t j = i+1; j < size(); ++j)
+	for (size_t j = 0; j < size(); ++j)
 	{
 		const ArrayItem& b = direct(j);
 
-		if ( a.greater_direct(b) )
-		{
+		if((i<j && a.greater_direct(b)) || (i>j && a.less_direct(b)))
 			inversions++;
-		}
 	}
 
 	m_inversions += inversions;
@@ -388,14 +386,12 @@ void SortArray::DelInversions(size_t i)
 	unsigned int inversions = 0;
 	const ArrayItem& a = direct(i);
 
-	for (size_t j = i+1; j < size(); ++j)
+	for (size_t j = 0; j < size(); ++j)
 	{
 		const ArrayItem& b = direct(j);
 
-		if ( a.greater_direct(b) )
-		{
+		if((i<j && a.greater_direct(b)) || (i>j && a.less_direct(b)))
 			inversions++;
-		}
 	}
 
 	m_inversions -= inversions;
@@ -437,6 +433,29 @@ void SortArray::UpdateInversions(size_t i, size_t j)
 		invdelta--;
 
 	m_inversions += invdelta;
+}
+
+void SortArray::RotateInversions(size_t l, size_t m, size_t r)
+{
+	if (!m_calc_inversions) {
+		m_inversions = -1;
+		return;
+	}
+	if (m_inversions < 0) return RecalcInversions();
+
+	if(m == l || r == m) return;
+
+	// The blocks [l..m) and [m..r) will be swapped over.
+	for(size_t i = l; i < m; i++) {
+		int invdelta = 0;
+
+		for(size_t j = m; j < r; j++) {
+			int c = m_array[i].cmp_direct(m_array[j]);
+			invdelta -= c;
+		}
+
+		m_inversions += invdelta;
+	}
 }
 
 size_t SortArray::GetRuns() const

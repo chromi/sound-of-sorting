@@ -53,29 +53,29 @@ const struct AlgoEntry g_algolist[] =
 
 	{ _("Insertion Sort"), &InsertionSort, UINT_MAX, UINT_MAX,
 	wxEmptyString },
-	{ _("Binary Insertion Sort"), &BinaryInsertionSort, UINT_MAX, 512,
+	{ _("Binary Insertion Sort"), &BinaryInsertionSort, UINT_MAX, UINT_MAX,
 	wxEmptyString },
 	{ _("Shell Sort"), &ShellSort, UINT_MAX, UINT_MAX,
 	wxEmptyString },
 
-	{ _("Merge Sort"), &MergeSort, UINT_MAX, 512,
+	{ _("Merge Sort"), &MergeSort, UINT_MAX, UINT_MAX,
 	_("Merge sort which merges two sorted sequences into a shadow array,"
 		"and then copies it back to the shown array.") },
-	{ _("Merge Sort (iterative)"), &MergeSortIterative, UINT_MAX, 512,
+	{ _("Merge Sort (iterative)"), &MergeSortIterative, UINT_MAX, UINT_MAX,
 	_("Merge sort variant which iteratively merges "
 		"subarrays of sizes of powers of two.") },
-	{ _("Merge Sort (in-place)"), &MergeSortInPlace, UINT_MAX, 512,
+	{ _("Merge Sort (in-place)"), &MergeSortInPlace, UINT_MAX, UINT_MAX,
 	_("Merge sort variant which iteratively merges "
 		"subarrays of sizes of powers of two, using an in-place merging algorithm.") },
-	{ _("Merge Sort (semi-in-place)"), &MergeSortSemiInPlace, UINT_MAX, 512,
+	{ _("Merge Sort (semi-in-place)"), &MergeSortSemiInPlace, UINT_MAX, UINT_MAX,
 	_("Merge sort variant which iteratively merges "
 		"subarrays of sizes of powers of two, using a fixed amount of temporary storage.") },
-	{ _("Splay Merge Sort"), &SplayMergeSort, UINT_MAX, 512,
+	{ _("Splay Merge Sort"), &SplayMergeSort, UINT_MAX, UINT_MAX,
 	_("Merge sort variant which uses splaysort for small blocks, and iteratively merges "
 		"subarrays of sizes of powers of two, using a fixed amount of temporary storage.") },
-	{ _("CataMerge Sort (stable)"), &CataMergeSortStable, UINT_MAX, 512,
+	{ _("CataMerge Sort (stable)"), &CataMergeSortStable, UINT_MAX, UINT_MAX,
 	_("Merge sort variant which searches for runs in either direction, reverses descending runs, then merges them.  Runs of equal values are treated as ascending.") },
-	{ _("CataMerge Sort (non-stable)"), &CataMergeSort, UINT_MAX, 512,
+	{ _("CataMerge Sort (non-stable)"), &CataMergeSort, UINT_MAX, UINT_MAX,
 	_("Merge sort variant which searches for runs in either direction, reverses descending runs, then merges them.  Runs of equal values are treated as part of a run in either direction.") },
 
 	{ _("Quick Sort (LR ptrs)"), &QuickSortLR, UINT_MAX, UINT_MAX,
@@ -115,7 +115,7 @@ const struct AlgoEntry g_algolist[] =
 	{ _("Splay Shake Sort"), &SplayShakeSort, UINT_MAX, UINT_MAX,
 	wxEmptyString },
 
-	{ _("Odd-Even Sort"), &OddEvenSort, UINT_MAX, 1024,
+	{ _("Odd-Even Sort"), &OddEvenSort, UINT_MAX, UINT_MAX,
 	wxEmptyString },
 	// older sequential implementation, which really makes little sense to do
 	//{ _("Bitonic Sort"), &BitonicSort, UINT_MAX, UINT_MAX, wxEmptyString },
@@ -123,9 +123,9 @@ const struct AlgoEntry g_algolist[] =
 	wxEmptyString },
 	{ _("Batcher's Odd-Even Merge Sort"), &BatcherSortNetwork, UINT_MAX, UINT_MAX,
 	wxEmptyString },
-	{ _("Cycle Sort"), &CycleSort, 512, UINT_MAX,
+	{ _("Cycle Sort"), &CycleSort, UINT_MAX, UINT_MAX,
 	wxEmptyString },
-	{ _("Radix Sort (LSD)"), &RadixSortLSD, UINT_MAX, 512,
+	{ _("Radix Sort (LSD)"), &RadixSortLSD, UINT_MAX, UINT_MAX,
 	_("Least significant digit radix sort, which copies item into a shadow "
 		"array during counting.") },
 	{ _("Radix Sort (MSD)"), &RadixSortMSD, UINT_MAX, UINT_MAX,
@@ -270,6 +270,9 @@ void BinaryInsertionSort(SortArray& A)
 	for (size_t i = 1; i < A.size(); ++i)
 	{
 		value_type key = A[i];
+
+		if(key >= A[i-1]) continue;
+
 		A.mark(i);
 
 		size_t lo = 0, hi = i;
@@ -282,7 +285,7 @@ void BinaryInsertionSort(SortArray& A)
 		}
 
 		// item has to go into position lo
-
+/*
 		size_t j = i;
 		while (j > lo)
 		{
@@ -291,8 +294,9 @@ void BinaryInsertionSort(SortArray& A)
 		}
 		if(lo < i)
 			A.set(lo, key);
-
+*/
 		A.unmark(i);
+		A.rotate(lo, i, i+1);
 	}
 }
 
@@ -460,7 +464,7 @@ void MergeSortMergeSmall(SortArray& A, const size_t l, const size_t m, const siz
 
 	// Entire blocks need swapping?
 	if(A[r-1] < A[l]) {
-		MergeSortSwapBlocks(A, l, m, r);
+		A.rotate(l, m, r);
 		return;
 	}
 
@@ -573,7 +577,7 @@ void MergeSortMergeInPlace(SortArray& A, const size_t l, const size_t m, const s
 
 	// Entire blocks need swapping?
 	if(A[r-1] < A[l]) {
-		MergeSortSwapBlocks(A, l, m, r);
+		A.rotate(l, m, r);
 		return;
 	}
 
@@ -642,7 +646,7 @@ void MergeSortMergeInPlace(SortArray& A, const size_t l, const size_t m, const s
 		z2++;
 		mm = z1 + (z2 - m);
 	}
-	MergeSortSwapBlocks(A, z1, m, z2);
+	A.rotate(z1, m, z2);
 
 	// This yields four smaller sorted blocks (of which up to two may be zero length).
 	// Recursively merge the two pairs of blocks.
@@ -796,10 +800,10 @@ void CataMergeSort(SortArray& A, bool stable, SmallOpt smallOpt = SMALL_MERGE)
 					break;
 
 				size_t k = runs[runs.size()-2], l = runs[runs.size()-3];
-				size_t kk = j-k, ll = k-l;
+				size_t kk = j-k, ll = k-l, mm = A.size()-j;
 
 				// is the last run at least as big as the previous one?
-				if(kk < ll)
+				if(kk < ll || mm < kk)
 					break;
 
 				// both true, so merge required; repeat as necessary
@@ -1264,17 +1268,12 @@ void IntroSort(class SortArray& A, ssize_t l, ssize_t r, ssize_t expectedDepth)
 	// Small subarrays get insertion sorted.
 	if(r <= l + 16) {
 		for(ssize_t i = l+1; i < r; i++) {
-			const value_type t = A[i];
 			ssize_t j;
 
-			for(j = i; j > l; j--) {
-				const value_type u = A[j-1];
-				if(u <= t)
+			for(j = i-1; j >= l; j--)
+				if(A[j] <= A[i])
 					break;
-				A.set(j, u);
-			}
-			if(j < i)
-				A.set(j, t);
+			A.rotate(j+1, i, i+1);
 		}
 
 		// Mark as completely sorted.
@@ -1453,27 +1452,19 @@ void GnomeSort(SortArray& A)
 void CombSort(SortArray& A)
 {
 	const double shrink = 1.3;
-
-	bool swapped = false;
 	size_t gap = A.size();
 
-	while ((gap > 1) || swapped)
+	while (gap > 1)
 	{
-		if (gap > 1) {
-			gap = (size_t)((float)gap / shrink);
-		}
-
-		swapped = false;
+		gap = (size_t)(gap / shrink);
 
 		for (size_t i = 0; gap + i < A.size(); ++i)
-		{
 			if (A[i] > A[i + gap])
-			{
 				A.swap(i, i+gap);
-				swapped = true;
-			}
-		}
 	}
+
+	// This prevents the end from looking like bubblesort.
+	InsertionSort(A);
 }
 
 // ****************************************************************************
@@ -1537,7 +1528,7 @@ std::vector<size_t> ShellSortIncrements(size_t n)
 				incs.push_back(n);
 			break;
 		}
-		
+
 		case SHELL_1960_FRANK: {
 		// worst-case O(n^(3/2))
 		// 2*floor(N/(2^k+1))+1
@@ -1614,7 +1605,7 @@ std::vector<size_t> ShellSortIncrements(size_t n)
 
 		case SHELL_1985_INCERPI: {
 		// This is the moderately famous Incerpi-Sedgewick sequence.
-		// generation function very complex, so taken from OEIS A036569.
+		// generation function very complex, so taken by rote from OEIS A036569.
 			incs.push_back(1);
 			incs.push_back(3);
 			incs.push_back(7);
@@ -1723,7 +1714,7 @@ std::vector<size_t> ShellSortIncrements(size_t n)
 
 		case SHELL_ROOT5_COPRIME: {
 		// Increment ratios of about 2.2 to 2.25 seem to work well,
-		// sqrt(5) is about 2.23 which seems like an awfully nice coincidence.
+		// sqrt(5) is about 2.236 which seems like an awfully nice coincidence.
 		// Ensure all increments are mutually coprime using gcd.
 			const double root5 = sqrt(5);
 			size_t i = 1, j = 1;
@@ -1897,8 +1888,6 @@ std::vector<size_t> ShellSortIncrements(size_t n)
 	return incs;
 }
 
-// with gaps by Robert Sedgewick from http://www.cs.princeton.edu/~rs/shell/shell.c
-
 void ShellSort(SortArray& A)
 {
 	std::vector<size_t> incs = ShellSortIncrements(A.size());
@@ -1914,13 +1903,10 @@ void ShellSort(SortArray& A)
 			value_type v = A[i];
 			size_t j = i;
 
-			while (j >= k && A[j-k] > v)
-			{
-				A.set(j, A[j-k]);
+			while (j >= k && A[j-k] > v) {
+				A.swap(j, j-k);
 				j -= k;
 			}
-
-			A.set(j, v);
 		}
 	}
 }
@@ -2736,8 +2722,10 @@ void SlowSort(SortArray& A)
 
 void CycleSort(SortArray& array, ssize_t n)
 {
-	volatile ssize_t cycleStart = 0;
-	array.watch(&cycleStart, 16);
+	ssize_t cycleStart = 0;
+
+	volatile ssize_t cycleMark = 0;
+	array.watch(&cycleMark, 16);
 
 	volatile ssize_t rank = 0;
 	array.watch(&rank, 3);
@@ -2749,17 +2737,18 @@ void CycleSort(SortArray& array, ssize_t n)
 		if(array.get_mark(cycleStart) == 2)
 			continue;
 
-		value_type& item = array.get_mutable(cycleStart);
+		const value_type& item = array[cycleStart];
+		cycleMark = cycleStart;
 
 		do {
-			// Find where to put the item.
+			// Find where to put the item, taking stable-sort characteristics into account.
 			rank = cycleStart;
 			for (ssize_t i = cycleStart + 1; i < n; ++i)
 			{
 				if(array.get_mark(i) == 2)
 					continue;
 
-				if (array[i] < item) {
+				if ((rank < cycleMark) ? (array[i] <= item) : (array[i] < item)) {
 					do {
 						rank++;
 					} while(array.get_mark(rank) == 2);
@@ -2773,14 +2762,15 @@ void CycleSort(SortArray& array, ssize_t n)
 			}
 
 			// Otherwise, put the item after any duplicates.
-			while (item == array[rank])
-				rank++;
+			//while (item == array[rank])
+			//	rank++;
 
 			// Put item into right place and colorize
-			std::swap(array.get_mutable(rank), item);
+			array.swap(rank, cycleStart);
 			array.mark(rank, 2);
 
 			// Continue for rest of the cycle.
+			cycleMark = rank;
 		}
 		while (rank != cycleStart);
 	}
@@ -3105,7 +3095,7 @@ namespace Splay {
 					x = tree.find(j);
 					tree.splay(x);
 				}
-				
+
 				A.swap(j,k);
 				A.mark_swap(j,k);
 
