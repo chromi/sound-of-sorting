@@ -36,6 +36,7 @@
 #include <algorithm>
 #include <numeric>
 #include <limits>
+#include <random>
 #include <vector>
 #include <inttypes.h>
 
@@ -96,6 +97,9 @@ const struct AlgoEntry g_algolist[] =
 	_("Ternary-split quicksort variant with the usual practical implementation features: "
 		"insertion-sort of small blocks, pivot values' position established without a separate rearrangement pass, "
 		"and smallest-first recursion to exploit tail-call optimisation.") },
+	{ _("Septenary Stable Quicksort"), &SeptenaryQuickSort, UINT_MAX, UINT_MAX,
+	_("Septenary-split stable quicksort variant with three pivots (quartiles of random sample), "
+		"insertion-sort of small blocks, and smallest-first partitioning with a priority queue.") },
 
 	{ _("Bubble Sort"), &BubbleSort, UINT_MAX, UINT_MAX,
 	wxEmptyString },
@@ -144,9 +148,9 @@ const struct AlgoEntry g_algolist[] =
 //	wxEmptyString },
 //	{ _("Bozo Sort"), &BozoSort, 10, UINT_MAX,
 //	wxEmptyString },
-	{ _("Stooge Sort"), &StoogeSort, 256, inversion_count_instrumented,
+	{ _("Stooge Sort"), &StoogeSort, 1050, inversion_count_instrumented,
 	wxEmptyString },
-	{ _("Slow Sort"), &SlowSort, 128, inversion_count_instrumented,
+	{ _("Slow Sort"), &SlowSort, 500, inversion_count_instrumented,
 	wxEmptyString }
 };
 
@@ -1369,6 +1373,244 @@ void IntroSort(class SortArray& A, ssize_t l, ssize_t r, ssize_t expectedDepth)
 void IntroSort(class SortArray& A)
 {
 	IntroSort(A, 0, A.size(), A.size());
+}
+
+// ****************************************************************************
+// *** Septenary Stable Quicksort
+
+// by Jonathan Morton
+
+typedef struct {
+	size_t l,r;
+} SortRange;
+
+typedef struct {
+	size_t a,b,c,d,e,f,g;
+} PartitionCounts7;
+
+void TernaryPartitionMerge(class SortArray& A, const SortRange& p,
+		size_t a, size_t b, size_t c, size_t aa, size_t bb, size_t cc)
+{
+	assert(a+b+c + aa+bb+cc == p.r - p.l);
+
+	if(b + bb > c + aa) {
+		A.rotate(p.l + a + b, p.l + a + b + c, p.l + a + b + c + aa);
+		A.rotate(p.l + a, p.l + a + b, p.l + a + b + aa);
+		A.rotate(p.r - cc - bb - c, p.r - cc - bb, p.r - cc);
+	} else {
+		A.rotate(p.l + a, p.l + a + b + c, p.r - cc);
+		A.rotate(p.l + a + aa, p.l + a + aa + bb, p.r - cc - c);
+	}
+}
+
+PartitionCounts7 SeptenaryPartition(class SortArray& A, const SortRange& p,
+		const value_type& pB, const value_type& pD, const value_type& pF)
+{
+	PartitionCounts7 op = {0,0,0,0,0,0,0};
+	assert(p.r > p.l);
+
+	if(p.r - p.l == 1) {
+		// SIngle item, compare against pivots, classify and mark
+		int cD = A[p.l].cmp(pD);
+
+		if(cD < 0) {
+			int cB = A[p.l].cmp(pB);
+
+			if(cB < 0) {
+				op.a++;
+				A.mark(p.l, 3);
+			} else if(cB > 0) {
+				op.c++;
+				A.mark(p.l, 3);
+			} else {
+				op.b++;
+				A.mark(p.l, 6);
+			}
+		} else if(cD > 0) {
+			int cF = A[p.l].cmp(pF);
+
+			if(cF < 0) {
+				op.e++;
+				A.mark(p.l, 3);
+			} else if(cF > 0) {
+				op.g++;
+				A.mark(p.l, 3);
+			} else {
+				op.f++;
+				A.mark(p.l, 6);
+			}
+		} else {
+			op.d++;
+			A.mark(p.l, 6);
+		}
+		return op;
+	}
+
+	// Recursively partition halves
+	const size_t mid = (p.l + p.r) / 2;
+	const SortRange lh = { p.l, mid }, rh = { mid, p.r };
+	const PartitionCounts7 lp = SeptenaryPartition(A, lh, pB, pD, pF);
+	const PartitionCounts7 rp = SeptenaryPartition(A, rh, pB, pD, pF);
+
+	// Stable partition merge: abcdefgABCDEFG -> aAbBcCdDeEfFgG
+	// Perform as three abcABC -> aAbBcC merges using two or three block rotations each
+	// Choice of two merge strategies at each stage to minimise data movement:
+	// 1: abcABC -> abAcBC -> aAbBcC - if len(bB)  > len(cA), moves c and A twice
+	// 2: abcABC -> aABbcC -> aAbBcC - if len(bB) <= len(cA), moves b and B twice
+
+	// First, merge abc-d-efg with ABC-D-EFG:
+	size_t lHead = lp.a + lp.b + lp.c;
+	size_t lTail = lp.e + lp.f + lp.g;
+	size_t rHead = rp.a + rp.b + rp.c;
+	size_t rTail = rp.e + rp.f + rp.g;
+
+	TernaryPartitionMerge(A, p, lHead, lp.d, lTail, rHead, rp.d, rTail);
+
+	// Next, merge abc with ABC:
+	size_t lPart = lHead + rHead;
+	SortRange lRange = { p.l, p.l + lPart };
+
+	TernaryPartitionMerge(A, lRange, lp.a, lp.b, lp.c, rp.a, rp.b, rp.c);
+
+	// Finally, merge efg with EFG:
+	size_t rPart = lTail + rTail;
+	SortRange rRange = { p.r - rPart, p.r };
+
+	TernaryPartitionMerge(A, rRange, lp.e, lp.f, lp.g, rp.e, rp.f, rp.g);
+
+	// Return merged partition sizes
+	op.a = lp.a + rp.a;
+	op.b = lp.b + rp.b;
+	op.c = lp.c + rp.c;
+	op.d = lp.d + rp.d;
+	op.e = lp.e + rp.e;
+	op.f = lp.f + rp.f;
+	op.g = lp.g + rp.g;
+	return op;
+}
+
+void SeptenaryQuickSort(class SortArray& A)
+{
+	// pivot selection relies on good-quality random sampling
+	std::random_device rngd;
+	std::default_random_engine rng(rngd());
+
+	// use a priority queue to run small partitions first
+	// initialise it with the full array
+	std::vector<SortRange> q;
+	{
+		SortRange full = { 0, A.size() };
+		q.push_back(full);
+	}
+
+	while(!q.empty()) {
+		const SortRange p = q.back();
+		q.pop_back();
+
+		if(p.r - p.l < 16) {
+			// small partition, insertion sort
+			for(size_t i = p.l+1; i < p.r; i++) {
+				size_t j;
+
+				for(j = i; j > p.l; j--)
+					if(A[j-1] <= A[i])
+						break;
+				A.rotate(j, i, i+1);
+			}
+
+			// Mark as completely sorted.
+			for(size_t i = p.l; i < p.r; i++)
+				A.mark(i, 2);
+
+			continue;
+		}
+
+		// select three pivots as the 2nd, 4th, 6th ranks of seven random samples
+		std::uniform_int_distribution<size_t> sampler(p.l, p.r-1);
+		size_t si[7];
+		for(int i=0; i < 7; i++) {
+			si[i] = sampler(rng);
+
+			// insertion-sort to keep samples in sorted order
+			// note that samples may occasionally land on same index, so avoid unnecessary compares
+			for(int j = i; j > 0; j--) {
+				if(si[j] != si[j-1] && A[si[j]] < A[si[j-1]])
+					std::swap(si[j], si[j-1]);
+				else
+					break;
+			}
+		}
+		const value_type pB = A[si[1]], pD = A[si[3]], pF = A[si[5]];
+
+		// perform stable partition into seven around three pivots
+		PartitionCounts7 parts = SeptenaryPartition(A, p, pB, pD, pF);
+		assert(parts.a + parts.b + parts.c + parts.d + parts.e + parts.f + parts.g == p.r - p.l);
+
+		// mark pivot values as completely sorted, unmark others
+		size_t x = p.l;
+		for(size_t y = parts.a; y > 0; y--)
+			A.unmark(x++);
+		for(size_t y = parts.b; y > 0; y--)
+			A.mark(x++, 2);
+		for(size_t y = parts.c; y > 0; y--)
+			A.unmark(x++);
+		for(size_t y = parts.d; y > 0; y--)
+			A.mark(x++, 2);
+		for(size_t y = parts.e; y > 0; y--)
+			A.unmark(x++);
+		for(size_t y = parts.f; y > 0; y--)
+			A.mark(x++, 2);
+		for(size_t y = parts.g; y > 0; y--)
+			A.unmark(x++);
+
+		// add four open partitions to the queue in sorted order
+		// these will all be smaller than the partition just removed from the queue
+		// so the time cost of this insertion is no more than insertion sort on 4 items
+		SortRange pp = { p.l, p.l + parts.a };
+		if(parts.a) {
+			q.push_back(pp);
+			for(size_t j = q.size()-1; j > 0; j--) {
+				if(q[j-1].r - q[j-1].l < parts.a)
+					std::swap(q[j-1], q[j]);
+				else
+					break;
+			}
+		}
+		pp.l = pp.r + parts.b;
+		pp.r = pp.l + parts.c;
+		if(parts.c) {
+			q.push_back(pp);
+			for(size_t j = q.size()-1; j > 0; j--) {
+				if(q[j-1].r - q[j-1].l < parts.c)
+					std::swap(q[j-1], q[j]);
+				else
+					break;
+			}
+		}
+		pp.l = pp.r + parts.d;
+		pp.r = pp.l + parts.e;
+		if(parts.e) {
+			q.push_back(pp);
+			for(size_t j = q.size()-1; j > 0; j--) {
+				if(q[j-1].r - q[j-1].l < parts.e)
+					std::swap(q[j-1], q[j]);
+				else
+					break;
+			}
+		}
+		pp.l = pp.r + parts.f;
+		pp.r = pp.l + parts.g;
+		if(parts.g) {
+			q.push_back(pp);
+			for(size_t j = q.size()-1; j > 0; j--) {
+				if(q[j-1].r - q[j-1].l < parts.g)
+					std::swap(q[j-1], q[j]);
+				else
+					break;
+			}
+		}
+		assert(pp.r == p.r);
+	}
 }
 
 // ****************************************************************************
