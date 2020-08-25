@@ -54,7 +54,9 @@ bool SortTestApp::OnInit()
 static size_t testsize[] = {
     10, 11, 12, 13, 14, 15, 16, 32,
     100, 101, 102, 103, 200,
-    1024, 1337, 2048,
+    1024, 1337, 1627, 2048,
+    3000, 4000, 7000, 9001, 10240,
+    12000, 16000, 23456, 34567, 65535,
     0
 };
 
@@ -115,8 +117,7 @@ int SortTestApp::OnRun()
                 SortedCheck sortcheck(array);
 
                 array.OnAlgoLaunch(ae);
-                if (ae.inversion_count_limit != UINT_MAX)
-                    array.SetCalcInversions(false);
+                array.SetCalcInversions(false);
 
                 wxStopWatch sw;
                 ae.func(array);

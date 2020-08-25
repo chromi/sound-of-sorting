@@ -421,22 +421,22 @@ public:
 
 			for(size_t i=0; i < c; i++) {
 				size_t x = (a+i)%(a+b);
-
-				// conventionally, we would pull this first value into a temporary
-				// instead, we'll just drag it along with swaps
-				m_access_list.push_back(x+l);
-				OnAccess();
+				const ArrayItem t = m_array[x+l];
 
 				for(size_t j=1; j < d; j++) {
 					size_t y = (x+b)%(a+b);
 
-					std::swap(m_array[x+l], m_array[y+l]);
-					std::swap(m_mark [x+l], m_mark [y+l]);
+					m_array[x+l] = m_array[y+l];
+					std::swap(m_mark[x+l], m_mark[y+l]);
 
-					m_access_list.push_back(y+l);
+					m_access_list.push_back(x+l);
 					OnAccess();
 					x = y;
 				}
+
+				m_array[x+l] = t;
+				m_access_list.push_back(x+l);
+				OnAccess();
 			}
 		}
 	}

@@ -282,6 +282,8 @@ void SortArray::OnAccess()
 
 	if (m_delay)
 		m_delay->OnAccess();
+	else
+		m_access_list.clear();
 }
 
 bool SortArray::CheckSorted()
