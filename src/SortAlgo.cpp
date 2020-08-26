@@ -1507,16 +1507,9 @@ void SeptenaryQuickSort(class SortArray& A)
 		const SortRange p = q.back();
 		q.pop_back();
 
-		if(p.r - p.l < 16) {
-			// small partition, insertion sort
-			for(size_t i = p.l+1; i < p.r; i++) {
-				size_t j;
-
-				for(j = i; j > p.l; j--)
-					if(A[j-1] <= A[i])
-						break;
-				A.rotate(j, i, i+1);
-			}
+		if(p.r - p.l < 32) {
+			// small partition
+			SplaySort(A, p.l, p.r);
 
 			// Mark as completely sorted.
 			for(size_t i = p.l; i < p.r; i++)
@@ -1541,6 +1534,9 @@ void SeptenaryQuickSort(class SortArray& A)
 			}
 		}
 		const value_type pB = A[si[1]], pD = A[si[3]], pF = A[si[5]];
+		A.mark(si[1], 6);
+		A.mark(si[3], 6);
+		A.mark(si[5], 6);
 
 		// perform stable partition into seven around three pivots
 		PartitionCounts7 parts = SeptenaryPartition(A, p, pB, pD, pF);
@@ -3471,6 +3467,11 @@ void SplaySort(SortArray& A, size_t l, size_t r)
 void SplayShakeSort(SortArray& A)
 {
 	Splay::shake(A, 0, A.size());
+}
+
+void SplayShakeSort(SortArray& A, size_t m)
+{
+	Splay::shake(A, 0, A.size(), m);
 }
 
 // ****************************************************************************

@@ -116,6 +116,7 @@ void SmoothSort(class SortArray& a);
 void SplaySort(class SortArray& a);
 void SplaySort(class SortArray& A, size_t l, size_t r);
 void SplayShakeSort(class SortArray& a);
+void SplayShakeSort(class SortArray& a, size_t m);
 
 void BitonicSort(SortArray& a);
 void BitonicSortNetwork(SortArray& a);

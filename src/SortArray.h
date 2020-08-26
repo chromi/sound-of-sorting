@@ -403,6 +403,8 @@ public:
 			for(size_t i=l, j=m; j < r; i++,j++) {
 				m_access_list.push_back(i);
 				m_access_list.push_back(j);
+				m_access1 = i;
+				m_access2 = j;
 				OnAccess();
 				std::swap(m_array[i], m_array[j]);
 				std::swap(m_mark [i], m_mark [j]);
@@ -423,12 +425,18 @@ public:
 				size_t x = (a+i)%(a+b);
 				const ArrayItem t = m_array[x+l];
 
+				m_access_list.push_back(x+l);
+				m_access1 = x+l;
+				OnAccess();
+
 				for(size_t j=1; j < d; j++) {
 					size_t y = (x+b)%(a+b);
 
 					m_array[x+l] = m_array[y+l];
 					std::swap(m_mark[x+l], m_mark[y+l]);
 
+					m_access2 = y+l;
+					m_access1 = x+l;
 					m_access_list.push_back(x+l);
 					OnAccess();
 					x = y;
@@ -436,9 +444,12 @@ public:
 
 				m_array[x+l] = t;
 				m_access_list.push_back(x+l);
+				m_access1 = x+l;
 				OnAccess();
 			}
 		}
+
+		m_access1 = m_access2 = -1;
 	}
 
 	/// Touch an item of the array: set color till next frame is outputted.
