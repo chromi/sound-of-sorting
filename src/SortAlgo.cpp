@@ -547,9 +547,7 @@ void MergeSortMergeSmall(SortArray& A, const size_t l, const size_t m, const siz
 
 typedef enum {
 	SMALL_NONE = 0,
-	SMALL_MERGE,
-	SMALL_SPLAY,
-	SMALL_INSERT
+	SMALL_MERGE
 } SmallOpt;
 
 void MergeSortMergeInPlace(SortArray& A, const size_t l, const size_t m, const size_t r, const SmallOpt smallOpt, const bool root=false)
@@ -671,26 +669,18 @@ void MergeSortMergeInPlace(SortArray& A, const size_t l, const size_t m, const s
 
 void MergeSortInPlace(SortArray& A, const size_t l, const size_t r, const SmallOpt smallOpt)
 {
-	const size_t beginSize = (smallOpt == SMALL_SPLAY) ? std::min(r-l+1, (size_t) 64)/2 : 1;
-
 	// Iterative mergesort.
-	for(size_t s=beginSize; s && s < (r-l); s *= 2) {
+	for(size_t s=1; s && s < (r-l); s *= 2) {
 		for(size_t i=l; i < r; i += s*2) {
 			size_t j=i+s;
 			size_t k=j+s;
 
-			if(j >= r) {
-				if(smallOpt == SMALL_SPLAY && s == beginSize)
-					j = r;
-				else
-					break;
-			}
+			if(j >= r)
+				break;
 			if(k > r)
 				k = r;
 
-			if(smallOpt == SMALL_SPLAY && k-i <= 64)
-				SplaySort(A, i, k);
-			else if(smallOpt == SMALL_MERGE && k-j <= MERGESORT_INPLACE_THRESHOLD)
+			if(smallOpt == SMALL_MERGE && k-j <= MERGESORT_INPLACE_THRESHOLD)
 				MergeSortMergeSmall(A, i, j, k, true);
 			else
 				MergeSortMergeInPlace(A, i, j, k, smallOpt, true);
@@ -708,12 +698,6 @@ void MergeSortInPlace(SortArray& A)
 void MergeSortSemiInPlace(SortArray& A)
 {
 	MergeSortInPlace(A, 0, A.size(), SMALL_MERGE);
-}
-
-// This version switches to a splaysort for small merges, using O(1) extra memory.
-void SplayMergeSort(SortArray& A)
-{
-	MergeSortInPlace(A, 0, A.size(), SMALL_SPLAY);
 }
 
 // ****************************************************************************
@@ -752,11 +736,6 @@ void CataMergeRuns(SortArray& A, std::vector<size_t>& runs, SmallOpt smallOpt)
 
 	if(smallOpt == SMALL_MERGE) {
 		if(k-l > MERGESORT_INPLACE_THRESHOLD && j-k > MERGESORT_INPLACE_THRESHOLD)
-			MergeSortMergeInPlace(A, l, k, j, smallOpt, true);
-		else
-			MergeSortMergeSmall(A, l, k, j, true);
-	} else if(smallOpt == SMALL_SPLAY) {
-		if(j-l > MERGESORT_INPLACE_THRESHOLD)
 			MergeSortMergeInPlace(A, l, k, j, smallOpt, true);
 		else
 			MergeSortMergeSmall(A, l, k, j, true);
@@ -3452,6 +3431,81 @@ namespace Splay {
 			i++;
 		}
 	}
+
+	// Collect a series of runs, as long as possible within the window size given.
+	std::vector<size_t> runs(SortArray& A, size_t m = 32) {
+		std::vector<size_t> out;
+		SplayTree tree(A, m+1);
+		size_t i,j,k;
+
+		for(i=0, j=0, k=0; i < A.size(); i++) {
+			// check whether we need to flush this run and start a new one
+			if(j > k && tree.find(i-1) != tree.first() && A[i] < A[j-1]) {
+				// flush
+				while(j < i) {
+					size_t x = tree.first();
+					size_t w = tree.tree[x].idx;
+					if(w != j) {
+						size_t y = tree.find(j);
+
+						A.swap(j,w);
+						A.mark_swap(j,w);
+
+						tree.tree[x].idx = j;
+						tree.tree[y].idx = w;
+					}
+					tree.remove(x);
+					j++;
+				}
+
+				// start new run
+				out.push_back(k);
+				k = j;
+			}
+
+			// extend window to right
+			tree.insert(i);
+
+			// push any overflowing value out on the left
+			if(i-j > m) {
+				size_t x = tree.first();
+				size_t w = tree.tree[x].idx;
+				if(w != j) {
+					size_t y = tree.find(j);
+
+					A.swap(j,w);
+					A.mark_swap(j,w);
+
+					tree.tree[x].idx = j;
+					tree.tree[y].idx = w;
+				}
+				tree.remove(x);
+				j++;
+			}
+		}
+
+		// flush final run
+		while(j < i) {
+			size_t x = tree.first();
+			size_t w = tree.tree[x].idx;
+			if(w != j) {
+				size_t y = tree.find(j);
+
+				A.swap(j,w);
+				A.mark_swap(j,w);
+
+				tree.tree[x].idx = j;
+				tree.tree[y].idx = w;
+			}
+			tree.remove(x);
+			j++;
+		}
+
+		out.push_back(k);
+		out.push_back(A.size());
+
+		return out;
+	}
 };
 
 void SplaySort(SortArray& A)
@@ -3472,6 +3526,13 @@ void SplayShakeSort(SortArray& A)
 void SplayShakeSort(SortArray& A, size_t m)
 {
 	Splay::shake(A, 0, A.size(), m);
+}
+
+void SplayMergeSort(SortArray& A)
+{	std::vector<size_t> runs = Splay::runs(A);
+
+	while(runs.size() > 2)
+		CataMergeRuns(A, runs, SMALL_NONE);
 }
 
 // ****************************************************************************
