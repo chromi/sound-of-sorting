@@ -197,7 +197,7 @@ public:
 	void SetSortDelay(SortDelay* delay) { m_delay = delay; }
 
 	/// called by main when an algorithm starts
-	void OnAlgoLaunch(const struct AlgoEntry& ae);
+	void OnAlgoLaunch(const struct AlgoEntry& ae, bool withInversions = true);
 
 	/// turn on/off calculation of inversions
 	void SetCalcInversions(bool on);

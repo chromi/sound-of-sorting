@@ -58,9 +58,9 @@ SortArray::SortArray()
 {
 }
 
-void SortArray::OnAlgoLaunch(const AlgoEntry& ae)
+void SortArray::OnAlgoLaunch(const AlgoEntry& ae, bool withInversions)
 {
-	if (size() <= ae.inversion_count_limit)
+	if (withInversions && size() <= ae.inversion_count_limit)
 	{
 		m_calc_inversions = true;
 		RecalcInversions();

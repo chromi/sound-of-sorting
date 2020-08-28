@@ -116,8 +116,7 @@ int SortTestApp::OnRun()
 
                 SortedCheck sortcheck(array);
 
-                array.OnAlgoLaunch(ae);
-                array.SetCalcInversions(false);
+                array.OnAlgoLaunch(ae, false);
 
                 wxStopWatch sw;
                 ae.func(array);
