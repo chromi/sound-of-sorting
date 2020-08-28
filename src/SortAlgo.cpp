@@ -598,7 +598,7 @@ void MergeSortMergeInPlace(SortArray& A, const size_t l, const size_t m, const s
 		z2 = (x2+y2)/2;
 	} else if(m-l > r-m) {
 		// right side smaller
-		x1 = m*2-y2;
+		x1 = m*2-r;
 		z1 = (x1+y1)/2;
 	}
 
@@ -3439,9 +3439,14 @@ namespace Splay {
 		size_t i,j,k;
 
 		for(i=0, j=0, k=0; i < A.size(); i++) {
+			// extend window to right
+			tree.insert(i);
+
 			// check whether we need to flush this run and start a new one
-			if(j > k && tree.find(i-1) != tree.first() && A[i] < A[j-1]) {
+			if(j > k && tree.find(i) == tree.first() && A[i] < A[j-1]) {
 				// flush
+				tree.remove(tree.first());
+
 				while(j < i) {
 					size_t x = tree.first();
 					size_t w = tree.tree[x].idx;
@@ -3461,10 +3466,8 @@ namespace Splay {
 				// start new run
 				out.push_back(k);
 				k = j;
+				tree.insert(i);
 			}
-
-			// extend window to right
-			tree.insert(i);
 
 			// push any overflowing value out on the left
 			if(i-j > m) {
