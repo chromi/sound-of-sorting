@@ -98,9 +98,8 @@ void SortArray::FinishFill()
 	m_is_sorted = false;
 	g_access_count = 0;
 	g_compare_count = 0;
-	m_calc_inversions = true;
-
-	RecalcInversions();
+	m_calc_inversions = false;
+	m_inversions = -1;
 }
 
 void SortArray::FillInputlist(wxArrayString& list)

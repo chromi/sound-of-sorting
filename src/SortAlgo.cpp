@@ -47,14 +47,14 @@ const unsigned int inversion_count_instrumented = 512;
 
 const struct AlgoEntry g_algolist[] =
 {
-	{ _("Selection Sort"), &SelectionSort, UINT_MAX, UINT_MAX,
+	{ _("Selection Sort"), &SelectionSort, 10240, UINT_MAX,
 	wxEmptyString },
-	{ _("Dual Selection Sort"), &DualSelectionSort, UINT_MAX, UINT_MAX,
+	{ _("Dual Selection Sort"), &DualSelectionSort, 10240, UINT_MAX,
 	wxEmptyString },
 
-	{ _("Insertion Sort"), &InsertionSort, UINT_MAX, UINT_MAX,
+	{ _("Insertion Sort"), &InsertionSort, 10240, UINT_MAX,
 	wxEmptyString },
-	{ _("Binary Insertion Sort"), &BinaryInsertionSort, UINT_MAX, UINT_MAX,
+	{ _("Binary Insertion Sort"), &BinaryInsertionSort, 10240, UINT_MAX,
 	wxEmptyString },
 	{ _("Shell Sort"), &ShellSort, UINT_MAX, UINT_MAX,
 	wxEmptyString },
@@ -79,9 +79,9 @@ const struct AlgoEntry g_algolist[] =
 	{ _("CataMerge Sort (non-stable)"), &CataMergeSort, UINT_MAX, UINT_MAX,
 	_("Merge sort variant which searches for runs in either direction, reverses descending runs, then merges them.  Runs of equal values are treated as part of a run in either direction.") },
 
-	{ _("Quick Sort (LR ptrs)"), &QuickSortLR, UINT_MAX, UINT_MAX,
+	{ _("Quick Sort (LR ptrs)"), &QuickSortLR, 16384, UINT_MAX,
 	_("Quick sort variant with left and right pointers.") },
-	{ _("Quick Sort (LL ptrs)"), &QuickSortLL, UINT_MAX, UINT_MAX,
+	{ _("Quick Sort (LL ptrs)"), &QuickSortLL, 16384, UINT_MAX,
 	_("Quick sort variant from 3rd edition of CLRS: two pointers on left.") },
 	{ _("Quick Sort (ternary, LR ptrs)"), &QuickSortTernaryLR, UINT_MAX, UINT_MAX,
 	_("Ternary-split quick sort variant, adapted from multikey quicksort by "
@@ -101,11 +101,11 @@ const struct AlgoEntry g_algolist[] =
 	_("Septenary-split stable quicksort variant with three pivots (quartiles of random sample), "
 		"insertion-sort of small blocks, and smallest-first partitioning with a priority queue.") },
 
-	{ _("Bubble Sort"), &BubbleSort, UINT_MAX, UINT_MAX,
+	{ _("Bubble Sort"), &BubbleSort, 10240, UINT_MAX,
 	wxEmptyString },
-	{ _("Cocktail Shaker Sort"), &CocktailShakerSort, UINT_MAX, UINT_MAX,
+	{ _("Cocktail Shaker Sort"), &CocktailShakerSort, 10240, UINT_MAX,
 	wxEmptyString },
-	{ _("Gnome Sort"), &GnomeSort, UINT_MAX, UINT_MAX,
+	{ _("Gnome Sort"), &GnomeSort, 10240, UINT_MAX,
 	wxEmptyString },
 	{ _("Comb Sort"), &CombSort, UINT_MAX, UINT_MAX,
 	wxEmptyString },
@@ -119,7 +119,7 @@ const struct AlgoEntry g_algolist[] =
 	{ _("Splay Shake Sort"), &SplayShakeSort, UINT_MAX, UINT_MAX,
 	wxEmptyString },
 
-	{ _("Odd-Even Sort"), &OddEvenSort, UINT_MAX, UINT_MAX,
+	{ _("Odd-Even Sort"), &OddEvenSort, 10240, UINT_MAX,
 	wxEmptyString },
 	// older sequential implementation, which really makes little sense to do
 	//{ _("Bitonic Sort"), &BitonicSort, UINT_MAX, UINT_MAX, wxEmptyString },
@@ -127,7 +127,7 @@ const struct AlgoEntry g_algolist[] =
 	wxEmptyString },
 	{ _("Batcher's Odd-Even Merge Sort"), &BatcherSortNetwork, UINT_MAX, UINT_MAX,
 	wxEmptyString },
-	{ _("Cycle Sort"), &CycleSort, UINT_MAX, UINT_MAX,
+	{ _("Cycle Sort"), &CycleSort, 10240, UINT_MAX,
 	wxEmptyString },
 	{ _("Radix Sort (LSD)"), &RadixSortLSD, UINT_MAX, UINT_MAX,
 	_("Least significant digit radix sort, which copies item into a shadow "
