@@ -71,13 +71,12 @@ const struct AlgoEntry g_algolist[] =
 	{ _("Merge Sort (semi-in-place)"), &MergeSortSemiInPlace, UINT_MAX, UINT_MAX,
 	_("Merge sort variant which iteratively merges "
 		"subarrays of sizes of powers of two, using a fixed amount of temporary storage.") },
-	{ _("Splay Merge Sort"), &SplayMergeSort, UINT_MAX, UINT_MAX,
-	_("Merge sort variant which uses splaysort for small blocks, and iteratively merges "
-		"subarrays of sizes of powers of two, using a fixed amount of temporary storage.") },
 	{ _("CataMerge Sort (stable)"), &CataMergeSortStable, UINT_MAX, UINT_MAX,
 	_("Merge sort variant which searches for runs in either direction, reverses descending runs, then merges them.  Runs of equal values are treated as ascending.") },
 	{ _("CataMerge Sort (non-stable)"), &CataMergeSort, UINT_MAX, UINT_MAX,
 	_("Merge sort variant which searches for runs in either direction, reverses descending runs, then merges them.  Runs of equal values are treated as part of a run in either direction.") },
+	{ _("Splay Merge Sort"), &SplayMergeSort, UINT_MAX, UINT_MAX,
+	_("Merge sort variant which uses splaysort to collect ascending runs, then merges adjacent pairs of runs in-place.") },
 
 	{ _("Quick Sort (LR ptrs)"), &QuickSortLR, 16384, UINT_MAX,
 	_("Quick sort variant with left and right pointers.") },
@@ -91,7 +90,7 @@ const struct AlgoEntry g_algolist[] =
 	_("Ternary-split quick sort variant: partitions \"<>?=\" using two "
 		"pointers at left and one at right. Afterwards copies the \"=\" to middle.") },
 	{ _("Quick Sort (dual pivot)"), &QuickSortDualPivot, UINT_MAX, UINT_MAX,
-	_("Dual pivot quick sort variant: partitions \"<1<2?>\" using three pointers, "
+	_("Dual pivot quick sort variant: partitions [ A < p <= B <= q < C ] using three pointers, "
 		"two at left and one at right.") },
 	{ _("IntroSort"), &IntroSort, UINT_MAX, UINT_MAX,
 	_("Ternary-split quicksort variant with the usual practical implementation features: "
@@ -289,16 +288,6 @@ void BinaryInsertionSort(SortArray& A)
 		}
 
 		// item has to go into position lo
-/*
-		size_t j = i;
-		while (j > lo)
-		{
-			A.set(j, A[j-1]);
-			j--;
-		}
-		if(lo < i)
-			A.set(lo, key);
-*/
 		A.unmark(i);
 		A.rotate(lo, i, i+1);
 	}
@@ -473,73 +462,77 @@ void MergeSortMergeSmall(SortArray& A, const size_t l, const size_t m, const siz
 	}
 
 	// Okay, down to business.
-	value_type tmp[MERGESORT_INPLACE_THRESHOLD];
-	if(m-l <= MERGESORT_INPLACE_THRESHOLD) {
-		size_t i=l, j=m, x=0, y=0;
+	size_t idx[MERGESORT_INPLACE_THRESHOLD] = {0};
+	size_t rev[MERGESORT_INPLACE_THRESHOLD] = {0};
 
-		while(i < j) {
-			if(x >= y || (j < r && tmp[x] > A[j])) {
-				// use right item
-				while(i < m && A[i] <= A[j])
-					i++;
-				if(i >= j)
-					break;
+	if(m-l <= MERGESORT_INPLACE_THRESHOLD && (m-l >= r-m || r-m > MERGESORT_INPLACE_THRESHOLD)) {
+		for(size_t i=l, x=0; i < m; i++, x++) {
+			idx[x] = i;
+			rev[i % MERGESORT_INPLACE_THRESHOLD] = x;
+		}
 
-				if(i >= m) {
-					// fill hole left by used right elements
-					A.mark_swap(i,j);
-					A.swap(i++, j++);
-				} else if(j+1 < r && A[i] <= A[j+1]) {
-					// store left element at head of remaining right block, preserving order
-					A.mark_swap(i,j);
-					A.swap(i++, j);
-				} else {
-					// store left element in tmp array
-					A.mark_swap(i,j);
-					A.mark(j, 12);
-					tmp[y++] = A[i];
-					A.set(i++, A[j++]);
+		for(size_t i=l, j=m, x=0; i < j; i++) {
+			if(j >= r || A[idx[x]] <= A[j]) {
+				// use left item
+				if(idx[x] != i) {
+					// left item not already in place
+					size_t y = rev[i % MERGESORT_INPLACE_THRESHOLD];
+
+					A.swap(i, idx[x]);
+					std::swap(idx[x], idx[y]);
+					rev[idx[y] % MERGESORT_INPLACE_THRESHOLD] = y;
 				}
+
+				A.mark(i, 4);	// left item
+
+				x++;
 			} else {
-				// use item from tmp array, which always sorts before remaining left items
-				A.mark(i, 4);
-				if(i < m)
-					tmp[y++] = A[i];
-				A.set(i++, tmp[x++]);
+				// use right item, which must displace a left item
+				size_t y = rev[i % MERGESORT_INPLACE_THRESHOLD];
+
+				A.swap(i,j);
+				A.mark(i, 11);	// right item
+				A.mark(j, 12);	// internally buffered left item
+
+				idx[y] = j;
+				rev[j % MERGESORT_INPLACE_THRESHOLD] = y;
+
+				j++;
 			}
 		}
 	} else {
-		size_t i=r, j=m, x=0, y=0;
+		for(size_t i=r, x=0; i > m; i--, x++) {
+			idx[x] = i-1;
+			rev[(i-1) % MERGESORT_INPLACE_THRESHOLD] = x;
+		}
 
-		while(i > j) {
-			if(x >= y || (j > l && tmp[x] < A[j-1])) {
-				// use left item
-				while(i > m && A[i-1] >= A[j-1])
-					i--;
-				if(i <= j)
-					break;
+		for(size_t i=r, j=m, x=0; i > j; i--) {
+			if(j <= l || A[idx[x]] >= A[j-1]) {
+				// use right item
+				if(idx[x] != i-1) {
+					// right item not already in place
+					size_t y = rev[(i-1) % MERGESORT_INPLACE_THRESHOLD];
 
-				if(i <= m) {
-					// fill hole left by used left elements
-					A.mark_swap(i-1, j-1);
-					A.swap(--i, --j);
-				} else if(j-1 > l && A[i-1] >= A[j-2]) {
-					// store right element at tail of remaining left block, preserving order
-					A.mark_swap(i-1, j-1);
-					A.swap(--i, j-1);
-				} else {
-					// store right element in tmp array
-					A.mark_swap(i-1, j-1);
-					A.mark(j-1, 12);
-					tmp[y++] = A[i-1];
-					A.set(--i, A[--j]);
+					A.swap(i-1, idx[x]);
+					std::swap(idx[x], idx[y]);
+					rev[idx[y] % MERGESORT_INPLACE_THRESHOLD] = y;
 				}
+
+				A.mark(i-1, 11);	// right item
+
+				x++;
 			} else {
-				// use item from tmp array, which always sorts after remaining right items
-				A.mark(i-1, 11);
-				if(i > m)
-					tmp[y++] = A[i-1];
-				A.set(--i, tmp[x++]);
+				// use left item, which must displace a right item
+				size_t y = rev[(i-1) % MERGESORT_INPLACE_THRESHOLD];
+
+				A.swap(i-1, j-1);
+				A.mark(i-1, 4); 	// left item
+				A.mark(j-1, 12);	// internally buffered right item
+
+				idx[y] = j-1;
+				rev[(j-1) % MERGESORT_INPLACE_THRESHOLD] = y;
+
+				j--;
 			}
 		}
 	}
@@ -654,13 +647,15 @@ void MergeSortMergeInPlace(SortArray& A, const size_t l, const size_t m, const s
 	// Recursively merge the two pairs of blocks.
 	// This recursion is what makes this algorithm O(N * (log N)^2) instead of O(N log N).
 	if(z1 > l) {
-		if(smallOpt && (z1-l <= MERGESORT_INPLACE_THRESHOLD || mm-z1 <= MERGESORT_INPLACE_THRESHOLD))
+		if(smallOpt && mm-l < 4*MERGESORT_INPLACE_THRESHOLD
+			&& (z1-l <= MERGESORT_INPLACE_THRESHOLD || mm-z1 <= MERGESORT_INPLACE_THRESHOLD))
 			MergeSortMergeSmall(A, l, z1, mm);
 		else
 			MergeSortMergeInPlace(A, l, z1, mm, smallOpt);
 	}
 	if(z2 < r) {
-		if(smallOpt && (z2-mm <= MERGESORT_INPLACE_THRESHOLD || r-z2 <= MERGESORT_INPLACE_THRESHOLD))
+		if(smallOpt && r-mm < 4*MERGESORT_INPLACE_THRESHOLD
+			&& (z2-mm <= MERGESORT_INPLACE_THRESHOLD || r-z2 <= MERGESORT_INPLACE_THRESHOLD))
 			MergeSortMergeSmall(A, mm, z2, r);
 		else
 			MergeSortMergeInPlace(A, mm, z2, r, smallOpt);
@@ -1180,60 +1175,97 @@ void QuickSortTernaryLL(SortArray& A)
 // ****************************************************************************
 // *** Dual-Pivot Quick Sort
 
-// by Sebastian Wild
+// Rewritten by Jonathan Morton
+// Now chooses better pivots for (nearly) sorted inputs, and handles runs of equal values.
+// Quadratic behaviour is thus avoided for most common data.
 
 void dualPivotYaroslavskiy(class SortArray& a, int left, int right)
 {
-	if (right > left)
+	if(right <= left)
+		return;	// at most one element, trivially sorted
+
+	if(right == left+1) {
+		// exactly two elements, compare and swap
+		if(a[left] > a[right])
+			a.swap(left, right);
+		return;
+	}
+
+	const size_t offset = (right - left) / 3;
+	value_type p = a[left  + offset];
+	value_type q = a[right - offset];
+	bool swapped = false;
+
+	if(p > q) {
+		std::swap(p,q);
+		swapped = true;
+	}
+
+	a.mark(left);
+	a.mark(right);
+
+	volatile ssize_t l = left;
+	volatile ssize_t g = right;
+	volatile ssize_t k = l;
+
+	a.watch(&l, 3);
+	a.watch(&g, 3);
+	a.watch(&k, 3);
+
+	while (k <= g)
 	{
-		if (a[left] > a[right]) {
+		if (a[k] < p) {
+			if(k != l)
+				a.swap(k, l++);
+			else
+				l++;
+		} else if (a[k] > q) {
+			while (k < g && a[g] > q)
+				g--;
+			if(k < g)
+				a.swap(k, g--);
+			else
+				g--;
+
+			if (a[k] < p)
+				a.swap(k, l++);
+		}
+		k++;
+	}
+
+	a.unmark_all();
+	a.unwatch_all();
+
+	if(l == left && g == right) {
+		// pivots are extrema; no values found above q or below p
+		if(p == q)
+			return;	// run of equals
+
+		if(offset) {
+			if(swapped) {
+				a.swap(right - offset, left);
+				a.swap(left  + offset, right);
+			} else {
+				a.swap(left  + offset, left);
+				a.swap(right - offset, right);
+			}
+		} else if(swapped) {
 			a.swap(left, right);
 		}
 
-		const value_type p = a[left];
-		const value_type q = a[right];
-
-		a.mark(left);
-		a.mark(right);
-
-		volatile ssize_t l = left + 1;
-		volatile ssize_t g = right - 1;
-		volatile ssize_t k = l;
-
-		a.watch(&l, 3);
-		a.watch(&g, 3);
-		a.watch(&k, 3);
-
-		while (k <= g)
-		{
-			if (a[k] < p) {
-				a.swap(k, l);
-				++l;
-			}
-			else if (a[k] >= q) {
-				while (a[g] > q && k < g)  --g;
-				a.swap(k, g);
-				--g;
-
-				if (a[k] < p) {
-					a.swap(k, l);
-					++l;
-				}
-			}
-			++k;
-		}
-		--l;
-		++g;
-		a.swap(left, l);
-		a.swap(right, g);
-
-		a.unmark_all();
-		a.unwatch_all();
-
-		dualPivotYaroslavskiy(a, left, l - 1);
-		dualPivotYaroslavskiy(a, l + 1, g - 1);
-		dualPivotYaroslavskiy(a, g + 1, right);
+		// extrema values moved to ends, so we will make progress
+		l++;
+		g--;
 	}
+
+	if(l > left)
+		dualPivotYaroslavskiy(a, left, l - 1);
+
+	if(g > l && p != q)
+		dualPivotYaroslavskiy(a, l, g);
+
+	if(g < right)
+		dualPivotYaroslavskiy(a, g + 1, right);
 }
 
 void QuickSortDualPivot(class SortArray& a)
@@ -3330,7 +3362,7 @@ namespace Splay {
 	// so up to m items can be carried along in a single pass, instad of just one
 	// with m == r-l, this reduces to a plain splaysort
 	// with m == 1, this reduces to a plain cocktail shaker sort
-	void shake(SortArray& A, size_t l, size_t r, size_t m = 0) {
+	void shake(SortArray& A, size_t l, size_t r, size_t m = 32) {
 		if(!m) {
 			while(m*m <= r-l)
 				m++;
@@ -3535,7 +3567,7 @@ void SplayMergeSort(SortArray& A)
 {	std::vector<size_t> runs = Splay::runs(A);
 
 	while(runs.size() > 2)
-		CataMergeRuns(A, runs, SMALL_NONE);
+		CataMergeRuns(A, runs, SMALL_MERGE);
 }
 
 // ****************************************************************************
