@@ -82,6 +82,7 @@ void QuickSortDualPivot(class SortArray& a);
 
 void IntroSort(class SortArray& a);
 void SeptenaryQuickSort(class SortArray& a);
+void SeptenaryStableQuickSort(class SortArray& a);
 
 void BubbleSort(class SortArray& a);
 void CocktailShakerSort(class SortArray& a);

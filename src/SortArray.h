@@ -101,9 +101,6 @@ public:
 	{ OnComparison(*this,v); return (value >= v.value); }
 
 	// ternary comparison which counts just one
-	int cmp_direct(const ArrayItem& v) const {
-		return (value == v.value ? 0 : value < v.value ? -1 : +1);
-	}
 	int cmp(const ArrayItem& v) const {
 		OnComparison(*this,v);
 		return (value == v.value ? 0 : value < v.value ? -1 : +1);
@@ -119,6 +116,9 @@ public:
 
 	bool greater_direct(const ArrayItem& v) const
 	{ return (value > v.value); }
+	int cmp_direct(const ArrayItem& v) const {
+		return (value == v.value ? 0 : value < v.value ? -1 : +1);
+	}
 
 	static void OnComparison(const ArrayItem& a, const ArrayItem& b);
 };
@@ -364,10 +364,13 @@ public:
 
 	/// Special function to swap the value in the array, this method provides a
 	/// special visualization for this operation.
-	void swap(size_t i, size_t j)
+	void swap(size_t i, size_t j, bool withMarks=false)
 	{
 		ASSERT(i < m_array.size());
 		ASSERT(j < m_array.size());
+
+		if(i == j)
+			return;
 
 		{
 			wxMutexLocker lock(m_mutex);
@@ -384,8 +387,109 @@ public:
 
 		OnAccess();
 		std::swap(m_array[i], m_array[j]);
+		if(withMarks)
+			mark_swap(i,j);
 		OnAccess();
 		m_access2 = -1;
+	}
+
+	/// Three, four, and five-way element rotations
+	/// Push the first element along to displace the last, other elements move back
+	/// Incurs one access per element
+	void swap3(size_t i, size_t j, size_t k, bool withMarks=false)
+	{
+		ASSERT(i < m_array.size());
+		ASSERT(j < m_array.size());
+		ASSERT(k < m_array.size());
+
+		if(i == j && j == k)
+			return;
+		if(i == j)
+			return swap(j, k, withMarks);
+		if(j == k)
+			return swap(i, j, withMarks);
+
+		const ArrayItem t = m_array[i];
+		const unsigned char m = m_mark[i];
+
+		m_mark[i] = m_mark[j];
+		set(i, m_array[j]);
+
+		m_mark[j] = m_mark[k];
+		set(j, m_array[k]);
+
+		m_mark[k] = m;
+		set(k, t);
+	}
+
+	void swap4(size_t i, size_t j, size_t k, size_t p, bool withMarks=false)
+	{
+		ASSERT(i < m_array.size());
+		ASSERT(j < m_array.size());
+		ASSERT(k < m_array.size());
+		ASSERT(p < m_array.size());
+
+		if(i == j && j == k && k == p)
+			return;
+		if(i == j)
+			return swap3(j, k, p, withMarks);
+		if(j == k)
+			return swap3(i, j, p, withMarks);
+		if(k == p)
+			return swap3(i, j, k, withMarks);
+
+		const ArrayItem t = m_array[i];
+		const unsigned char m = m_mark[i];
+
+		m_mark[i] = m_mark[j];
+		set(i, m_array[j]);
+
+		m_mark[j] = m_mark[k];
+		set(j, m_array[k]);
+
+		m_mark[k] = m_mark[p];
+		set(k, m_array[p]);
+
+		m_mark[p] = m;
+		set(p, t);
+	}
+
+	void swap5(size_t i, size_t j, size_t k, size_t p, size_t q, bool withMarks=false)
+	{
+		ASSERT(i < m_array.size());
+		ASSERT(j < m_array.size());
+		ASSERT(k < m_array.size());
+		ASSERT(p < m_array.size());
+		ASSERT(q < m_array.size());
+
+		if(i == j && j == k && k == p && p == q)
+			return;
+		if(i == j)
+			return swap4(j, k, p, q, withMarks);
+		if(j == k)
+			return swap4(i, j, p, q, withMarks);
+		if(k == p)
+			return swap4(i, j, k, q, withMarks);
+		if(p == q)
+			return swap4(i, j, k, p, withMarks);
+
+		const ArrayItem t = m_array[i];
+		const unsigned char m = m_mark[i];
+
+		m_mark[i] = m_mark[j];
+		set(i, m_array[j]);
+
+		m_mark[j] = m_mark[k];
+		set(j, m_array[k]);
+
+		m_mark[k] = m_mark[p];
+		set(k, m_array[p]);
+
+		m_mark[p] = m_mark[q];
+		set(p, m_array[q]);
+
+		m_mark[q] = m;
+		set(q, t);
 	}
 
 	/// Special function to efficiently swap two adjacent blocks in the array.

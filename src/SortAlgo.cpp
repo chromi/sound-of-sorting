@@ -96,7 +96,11 @@ const struct AlgoEntry g_algolist[] =
 	_("Ternary-split quicksort variant with the usual practical implementation features: "
 		"insertion-sort of small blocks, pivot values' position established without a separate rearrangement pass, "
 		"and smallest-first recursion to exploit tail-call optimisation.") },
-	{ _("Septenary Stable Quicksort"), &SeptenaryQuickSort, UINT_MAX, UINT_MAX,
+
+	{ _("Septenary Quicksort"), &SeptenaryQuickSort, UINT_MAX, UINT_MAX,
+	_("Septenary-split quicksort variant with three pivots (quartiles of random sample), "
+		"insertion-sort of small blocks, and smallest-first partitioning with a priority queue.") },
+	{ _("Septenary Stable Quicksort"), &SeptenaryStableQuickSort, UINT_MAX, UINT_MAX,
 	_("Septenary-split stable quicksort variant with three pivots (quartiles of random sample), "
 		"insertion-sort of small blocks, and smallest-first partitioning with a priority queue.") },
 
@@ -1399,6 +1403,181 @@ typedef struct {
 	size_t a,b,c,d,e,f,g;
 } PartitionCounts7;
 
+PartitionCounts7 SeptenaryPartition(class SortArray& A, const SortRange& p,
+		const value_type& pB, const value_type& pD, const value_type& pF)
+{
+	PartitionCounts7 op = {0,0,0,0,0,0,0};
+	assert(p.r > p.l);
+
+	const size_t m = (p.r + p.l) / 2;
+	SortRange rB = { p.l, p.l }, rD = { m, m }, rF = { p.r, p.r };	// borders of equal-to-pivot partitions
+	size_t i=m, j=m;	// leading edges (from centre) of C and E partitions, trailing edges of open partitions
+
+	while(i > rB.r || j < rF.l) {
+		size_t di = i > rB.r ? i - rB.r : 0;
+		size_t dj = j < rF.l ? rF.l - j : 0;
+
+		if(di > dj) {
+			// take an item from the left open partition
+			const value_type& v = A[--i];
+			int cD = v.cmp(pD);
+
+			if(cD < 0) {
+				int cB = v.cmp(pB);
+
+				if(cB < 0) {
+					A.mark(i, 3);	// A
+
+					// extend A partition
+					// advance B partition by one position to make room
+					A.swap3(i++, rB.r++, rB.l++, true);
+				} else if(cB > 0) {
+					A.mark(i, 3);	// C
+
+					// item already in position, pointer already adjusted
+				} else {
+					A.mark(i, 6);	// B
+
+					// extend B partition
+					A.swap(rB.r++, i++, true);
+				}
+			} else if(cD > 0) {
+				int cF = v.cmp(pF);
+
+				if(cF < 0) {
+					A.mark(i, 3);	// E
+
+					// extend E partition...
+					if(rF.l > j) {
+						// ...to right, into open partition
+						A.swap(i++, j++, true);
+					} else {
+						// ...to left, moving D and C partitions
+						A.swap3(i, --rD.l, --rD.r, true);
+					}
+				} else if(cF > 0) {
+					A.mark(i, 3);	// G
+
+					// extend G partition to left
+					if(rF.l > j) {
+						// move F partition one place to left, into right open partition
+						A.swap3(i++, --rF.l, --rF.r, true);
+					} else {
+						// move contiguous C, D, E, and F partitions to left, into left open partition
+						A.swap5(i, --rD.l, --rD.r, --rF.l, --rF.r, true);
+					}
+				} else {
+					A.mark(i, 6);	// F
+
+					// extend F partition to left
+					if(rF.l > j) {
+						// extend directly into right open partition
+						A.swap(i++, --rF.l, true);
+					} else {
+						// right partitions are contiguous with middle ones, so shuffle them up
+						A.swap4(i, --rD.l, --rD.r, --rF.l, true);
+					}
+				}
+			} else {
+				A.mark(i, 6);	// D
+
+				// extend D partition to left
+				A.swap(i, --rD.l, true);
+			}
+		} else {
+			// take an item from the right open partition
+			const value_type& v = A[j];
+			int cD = v.cmp(pD);
+
+			if(cD < 0) {
+				int cB = v.cmp(pB);
+
+				if(cB < 0) {
+					A.mark(j, 3);	// A
+
+					// extend A partition to right
+					if(rB.r < i) {
+						// ...into left open partition
+						// move B partition right
+						A.swap3(j, rB.r++, rB.l++, true);
+					} else {
+						// ...into right open partition
+						A.swap5(j++, rD.r++, rD.l++, rB.r++, rB.l++, true);
+					}
+				} else if(cB > 0) {
+					A.mark(j, 3);	// C
+
+					if(rB.r < i) {
+						// extend C partition to left, into open partition
+						A.swap(--i, j, true);
+					} else {
+						// extend C partition to right, moving middle partitions
+						A.swap3(j++, rD.r++, rD.l++, true);
+					}
+				} else {
+					A.mark(j, 6);	// B
+
+					// extend B partition to right
+					if(rB.r < i) {
+						// ...into left open partition
+						A.swap(j, rB.r++, true);
+					} else {
+						// ...moving CDE right
+						A.swap4(j++, rD.r++, rD.l++, rB.r++, true);
+					}
+				}
+			} else if(cD > 0) {
+				int cF = v.cmp(pF);
+
+				if(cF < 0) {
+					A.mark(j, 3);	// E
+
+					// extend E partition to right - data item already in place
+					j++;
+				} else if(cF > 0) {
+					A.mark(j, 3);	// G
+
+					// extend G partition to left
+					// move F partition left
+					A.swap3(j, --rF.l, --rF.r, true);
+				} else {
+					A.mark(j, 6);	// F
+
+					// extend F partition to left
+					A.swap(j, --rF.l, true);
+				}
+			} else {
+				A.mark(j, 6);	// D
+
+				// extend D partition to right
+				A.swap(j++, rD.r++, true);
+			}
+		}
+	}
+
+	ASSERT(i <= rB.r);
+	ASSERT(i <= rD.l);
+	ASSERT(j >= rD.r);
+	ASSERT(j >= rF.l);
+
+	ASSERT(rB.l >= p.l);
+	ASSERT(rB.r >= rB.l);
+	ASSERT(rD.l >= rB.r);
+	ASSERT(rD.r >= rD.l);
+	ASSERT(rF.l >= rD.r);
+	ASSERT(rF.r >= rF.l);
+	ASSERT(p.r  >= rF.r);
+
+	op.a = rB.l - p.l;
+	op.b = rB.r - rB.l;
+	op.c = rD.l - rB.r;
+	op.d = rD.r - rD.l;
+	op.e = rF.l - rD.r;
+	op.f = rF.r - rF.l;
+	op.g = p.r  - rF.r;
+	return op;
+}
+
 void TernaryPartitionMerge(class SortArray& A, const SortRange& p,
 		size_t a, size_t b, size_t c, size_t aa, size_t bb, size_t cc)
 {
@@ -1414,14 +1593,14 @@ void TernaryPartitionMerge(class SortArray& A, const SortRange& p,
 	}
 }
 
-PartitionCounts7 SeptenaryPartition(class SortArray& A, const SortRange& p,
+PartitionCounts7 SeptenaryStablePartition(class SortArray& A, const SortRange& p,
 		const value_type& pB, const value_type& pD, const value_type& pF)
 {
 	PartitionCounts7 op = {0,0,0,0,0,0,0};
 	assert(p.r > p.l);
 
 	if(p.r - p.l == 1) {
-		// SIngle item, compare against pivots, classify and mark
+		// Single item, compare against pivots, classify and mark
 		int cD = A[p.l].cmp(pD);
 
 		if(cD < 0) {
@@ -1460,8 +1639,8 @@ PartitionCounts7 SeptenaryPartition(class SortArray& A, const SortRange& p,
 	// Recursively partition halves
 	const size_t mid = (p.l + p.r) / 2;
 	const SortRange lh = { p.l, mid }, rh = { mid, p.r };
-	const PartitionCounts7 lp = SeptenaryPartition(A, lh, pB, pD, pF);
-	const PartitionCounts7 rp = SeptenaryPartition(A, rh, pB, pD, pF);
+	const PartitionCounts7 lp = SeptenaryStablePartition(A, lh, pB, pD, pF);
+	const PartitionCounts7 rp = SeptenaryStablePartition(A, rh, pB, pD, pF);
 
 	// Stable partition merge: abcdefgABCDEFG -> aAbBcCdDeEfFgG
 	// Perform as three abcABC -> aAbBcC merges using two or three block rotations each
@@ -1500,7 +1679,7 @@ PartitionCounts7 SeptenaryPartition(class SortArray& A, const SortRange& p,
 	return op;
 }
 
-void SeptenaryQuickSort(class SortArray& A)
+void SeptenaryQuickSort(class SortArray& A, bool stable)
 {
 	// pivot selection relies on good-quality random sampling
 	std::random_device rngd;
@@ -1550,7 +1729,9 @@ void SeptenaryQuickSort(class SortArray& A)
 		A.mark(si[5], 6);
 
 		// perform stable partition into seven around three pivots
-		PartitionCounts7 parts = SeptenaryPartition(A, p, pB, pD, pF);
+		PartitionCounts7 parts = stable ?
+			SeptenaryStablePartition(A, p, pB, pD, pF) :
+			SeptenaryPartition      (A, p, pB, pD, pF);
 		assert(parts.a + parts.b + parts.c + parts.d + parts.e + parts.f + parts.g == p.r - p.l);
 
 		// mark pivot values as completely sorted, unmark others
@@ -1619,6 +1800,10 @@ void SeptenaryQuickSort(class SortArray& A)
 		assert(pp.r == p.r);
 	}
 }
+
+void SeptenaryQuickSort(class SortArray& A) { SeptenaryQuickSort(A, false); }
+
+void SeptenaryStableQuickSort(class SortArray& A) { SeptenaryQuickSort(A, true); }
 
 // ****************************************************************************
 // *** Bubble Sort
