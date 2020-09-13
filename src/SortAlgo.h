@@ -81,6 +81,8 @@ void QuickSortTernaryLL(class SortArray& a);
 void QuickSortDualPivot(class SortArray& a);
 
 void IntroSort(class SortArray& a);
+void IntroSortDual(class SortArray& a);
+void IntroSortDualStable(class SortArray& a);
 void SeptenaryQuickSort(class SortArray& a);
 void SeptenaryStableQuickSort(class SortArray& a);
 

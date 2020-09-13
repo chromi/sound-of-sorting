@@ -92,10 +92,15 @@ const struct AlgoEntry g_algolist[] =
 	{ _("Quick Sort (dual pivot)"), &QuickSortDualPivot, UINT_MAX, UINT_MAX,
 	_("Dual pivot quick sort variant: partitions [ A < p <= B <= q < C ] using three pointers, "
 		"two at left and one at right.") },
-	{ _("IntroSort"), &IntroSort, UINT_MAX, UINT_MAX,
+
+	{ _("IntroSort (ternary, insertion)"), &IntroSort, UINT_MAX, UINT_MAX,
 	_("Ternary-split quicksort variant with the usual practical implementation features: "
 		"insertion-sort of small blocks, pivot values' position established without a separate rearrangement pass, "
 		"and smallest-first recursion to exploit tail-call optimisation.") },
+	{ _("IntroSort (dual pivot, splaysort)"), &IntroSortDual, UINT_MAX, UINT_MAX,
+	_("A version of Introsort based on dual-pivot quicksort and splaysort, choosing pivots using random sampling.") },
+	{ _("Stable IntroSort (dual pivot, splaysort)"), &IntroSortDualStable, UINT_MAX, UINT_MAX,
+	_("A version of Introsort based on dual-pivot quicksort and splaysort, choosing pivots using random sampling, and using stable partitioning.") },
 
 	{ _("Septenary Quicksort"), &SeptenaryQuickSort, UINT_MAX, UINT_MAX,
 	_("Septenary-split quicksort variant with three pivots (quartiles of random sample), "
@@ -1316,20 +1321,15 @@ void IntroSort(class SortArray& A, ssize_t l, ssize_t r, ssize_t expectedDepth)
 
 	// Ternary partitioning pass, leaving small values at left, large values at right, and pivot values in middle.
 	// Shamelessly ripped from Yaroslavskiy dual-pivot, above, and adapted to suit.
-	volatile ssize_t i=l, j=l, k=r-1;
-	A.watch(&i, 4);
-	A.watch(&j, 4);
-	A.watch(&k, 4);
+	ssize_t i=l, j=l, k=r-1;
 
 	while(j <= k) {
 		const value_type v = A[j];
 		const int cv = v.cmp(pivot);
 
 		if(cv < 0) {
-			if(i < j)
-				A.swap(i, j);
-			A.mark(j++, 6);
-			A.mark(i++, 3);
+			A.mark(j, 3);
+			A.swap(i++, j++, true);
 		} else if(cv > 0) {
 			value_type w;
 			int cw;
@@ -1342,14 +1342,12 @@ void IntroSort(class SortArray& A, ssize_t l, ssize_t r, ssize_t expectedDepth)
 
 			if(j > k)
 				break;
-			if(j < k)
-				A.swap(j, k);
+			A.swap(j, k);
 			A.mark(k--, 3);
 
 			if(cw < 0) {
-				A.swap(i, j);
-				A.mark(j++, 6);
-				A.mark(i++, 3);
+				A.mark(j, 3);
+				A.swap(i++, j++, true);
 			} else {
 				A.mark(j++, 6);
 			}
@@ -1357,8 +1355,6 @@ void IntroSort(class SortArray& A, ssize_t l, ssize_t r, ssize_t expectedDepth)
 			A.mark(j++, 6);
 		}
 	}
-
-	A.unwatch_all();
 	k++;
 
 	// Mark pivot values as completely sorted, unmark all others.
@@ -1391,13 +1387,310 @@ void IntroSort(class SortArray& A)
 }
 
 // ****************************************************************************
-// *** Septenary Stable Quicksort
+// *** Dual-Pivot IntroSort
 
 // by Jonathan Morton
 
 typedef struct {
 	size_t l,r;
 } SortRange;
+
+typedef struct {
+	size_t a,b,c;
+} PartitionCounts3;
+
+void TernaryPartitionMerge(class SortArray& A, const SortRange& p,
+		size_t a, size_t b, size_t c, size_t aa, size_t bb, size_t cc)
+{
+	assert(a+b+c + aa+bb+cc == p.r - p.l);
+
+	if(b + bb > c + aa) {
+		A.rotate(p.l + a + b, p.l + a + b + c, p.l + a + b + c + aa);
+		A.rotate(p.l + a, p.l + a + b, p.l + a + b + aa);
+		A.rotate(p.r - cc - bb - c, p.r - cc - bb, p.r - cc);
+	} else {
+		A.rotate(p.l + a, p.l + a + b + c, p.r - cc);
+		A.rotate(p.l + a + aa, p.l + a + aa + bb, p.r - cc - c);
+	}
+}
+
+PartitionCounts3 DualStablePartition(class SortArray& A, const SortRange& p,
+		const value_type& pB, const value_type& pD)
+{
+	PartitionCounts3 op = {0,0,0};
+	assert(p.r > p.l);
+
+	if(p.r - p.l == 1) {
+		// Single item, compare against pivots, classify and mark
+		const value_type v = A[p.l];
+
+		if(v <= pB) {
+			op.a++;
+			A.mark(p.l, 3);
+		} else if(v >= pD) {
+			op.c++;
+			A.mark(p.l, 3);
+		} else {
+			op.b++;
+			A.mark(p.l, 5);
+		}
+		return op;
+	}
+
+	// Recursively partition halves
+	const size_t mid = (p.l + p.r) / 2;
+	const SortRange lh = { p.l, mid }, rh = { mid, p.r };
+	const PartitionCounts3 lp = DualStablePartition(A, lh, pB, pD);
+	const PartitionCounts3 rp = DualStablePartition(A, rh, pB, pD);
+
+	// Stable partition merge: abcABC -> aAbBcC
+	TernaryPartitionMerge(A, p, lp.a, lp.b, lp.c, rp.a, rp.b, rp.c);
+
+	// Return merged partition sizes
+	op.a = lp.a + rp.a;
+	op.b = lp.b + rp.b;
+	op.c = lp.c + rp.c;
+	return op;
+}
+
+PartitionCounts3 TernaryStablePartition(class SortArray& A, const SortRange& p,
+		const value_type& pB)
+{
+	PartitionCounts3 op = {0,0,0};
+	assert(p.r > p.l);
+
+	if(p.r - p.l == 1) {
+		// Single item, compare against pivots, classify and mark
+		const value_type v = A[p.l];
+		const int c = v.cmp(pB);
+
+		if(c < 0) {
+			op.a++;
+			A.mark(p.l, 3);
+		} else if(c > 0) {
+			op.c++;
+			A.mark(p.l, 3);
+		} else {
+			op.b++;
+			A.mark(p.l, 6);
+		}
+		return op;
+	}
+
+	// Recursively partition halves
+	const size_t mid = (p.l + p.r) / 2;
+	const SortRange lh = { p.l, mid }, rh = { mid, p.r };
+	const PartitionCounts3 lp = TernaryStablePartition(A, lh, pB);
+	const PartitionCounts3 rp = TernaryStablePartition(A, rh, pB);
+
+	// Stable partition merge: abcABC -> aAbBcC
+	TernaryPartitionMerge(A, p, lp.a, lp.b, lp.c, rp.a, rp.b, rp.c);
+
+	// Return merged partition sizes
+	op.a = lp.a + rp.a;
+	op.b = lp.b + rp.b;
+	op.c = lp.c + rp.c;
+	return op;
+}
+
+void IntroSortDual(class SortArray& A, bool stable)
+{
+	// pivot selection relies on good-quality random sampling
+	std::random_device rngd;
+	std::default_random_engine rng(rngd());
+
+	// use a priority queue to run small partitions first
+	// initialise it with the full array
+	std::vector<SortRange> q;
+	{
+		SortRange full = { 0, A.size() };
+		q.push_back(full);
+	}
+
+	while(!q.empty()) {
+		const SortRange p = q.back();
+		q.pop_back();
+
+		if(p.r - p.l < 32) {
+			// small partition
+			SplaySort(A, p.l, p.r);
+
+			// Mark as completely sorted.
+			for(size_t i = p.l; i < p.r; i++)
+				A.mark(i, 2);
+
+			continue;
+		}
+
+		// select two pivots as the 2nd & 4th ranks of five random samples
+		std::uniform_int_distribution<size_t> sampler(p.l, p.r-1);
+		size_t si[5];
+		for(int i=0; i < 5; i++) {
+			si[i] = sampler(rng);
+
+			// insertion-sort to keep samples in sorted order
+			// note that samples may occasionally land on same index, so avoid unnecessary compares
+			for(int j = i; j > 0; j--) {
+				if(si[j] != si[j-1] && A[si[j]] < A[si[j-1]])
+					std::swap(si[j], si[j-1]);
+				else
+					break;
+			}
+		}
+		const value_type pB = A[si[1]], pD = A[si[3]];
+		A.mark(si[1], 6);
+		A.mark(si[3], 6);
+
+		// perform (stable?) partition into three around two pivots
+		PartitionCounts3 parts = {0,0,0};
+		bool ternary = (pB == pD);
+
+		if(stable) {
+			if(ternary)
+				parts = TernaryStablePartition(A, p, pB);
+			else
+				parts = DualStablePartition(A, p, pB, pD);
+		} else if(ternary) {
+			// we probably have a run of values equal to the pivot
+			// so we'll perform a ternary partitioning: [ A < p == B == q < C ]
+			size_t i = p.l, j = p.l, k = p.r-1;
+
+			while(j <= k) {
+				const value_type v = A[j];
+				const int cv = v.cmp(pB);
+
+				if(cv < 0) {
+					A.mark(j, 3);
+					A.swap(i++, j++, true);
+				} else if(cv > 0) {
+					value_type w;
+					int cw;
+					do {
+						w = A[k];
+						cw = w.cmp(pB);
+						if(cw > 0)
+							A.mark(k--, 3);
+					} while(cw > 0);
+
+					if(j > k)
+						break;
+					A.swap(j, k);
+					A.mark(k--, 3);
+
+					if(cw < 0) {
+						A.mark(j, 3);
+						A.swap(i++, j++, true);
+					} else {
+						A.mark(j++, 6);
+					}
+				} else {
+					A.mark(j++, 6);
+				}
+			}
+			k++;
+
+			parts.a = i - p.l;
+			parts.b = k - i;
+			parts.c = p.r - k;
+		} else {
+			// perform a dual-pivot three-way partitioning: [ A <= p < B < q <= C ]
+			size_t i = p.l, j = p.l, k = p.r-1;
+
+			while(j <= k) {
+				const value_type v = A[j];
+
+				if(v <= pB) {
+					A.mark(j, 3);
+					A.swap(i++, j++, true);
+				} else if(v >= pD) {
+					value_type w;
+
+					while((w = A[k]) >= pD)
+						A.mark(k--, 3);
+
+					if(j > k)
+						break;
+					A.swap(j, k);
+					A.mark(k--, 3);
+
+					if(w <= pB) {
+						A.mark(j, 3);
+						A.swap(i++, j++, true);
+					} else {
+						A.mark(j++, 5);
+					}
+				} else {
+					A.mark(j++, 5);
+				}
+			}
+			k++;
+
+			parts.a = i - p.l;
+			parts.b = k - i;
+			parts.c = p.r - k;
+		}
+		assert(parts.a + parts.b + parts.c == p.r - p.l);
+
+		// mark pivot values as completely sorted, unmark others
+		if(ternary) {
+			size_t x = p.l;
+			for(size_t y = parts.a; y > 0; y--)
+				A.unmark(x++);
+			for(size_t y = parts.b; y > 0; y--)
+				A.mark(x++, 2);
+			for(size_t y = parts.c; y > 0; y--)
+				A.unmark(x++);
+		} else {
+			for(size_t y = p.l; y < p.r; y++)
+				A.unmark(y);
+		}
+
+		SortRange pp = { p.l, p.l + parts.a };
+		if(parts.a) {
+			q.push_back(pp);
+			for(size_t j = q.size()-1; j > 0; j--) {
+				if(q[j-1].r - q[j-1].l < parts.a)
+					std::swap(q[j-1], q[j]);
+				else
+					break;
+			}
+		}
+		if(!ternary) {
+			pp.l = pp.r;
+			pp.r = pp.l + parts.b;
+			if(parts.b) {
+				q.push_back(pp);
+				for(size_t j = q.size()-1; j > 0; j--) {
+					if(q[j-1].r - q[j-1].l < parts.b)
+						std::swap(q[j-1], q[j]);
+					else
+						break;
+				}
+			}
+		}
+		pp.l = p.l  + parts.b + parts.a;
+		pp.r = pp.l + parts.c;
+		if(parts.c) {
+			q.push_back(pp);
+			for(size_t j = q.size()-1; j > 0; j--) {
+				if(q[j-1].r - q[j-1].l < parts.c)
+					std::swap(q[j-1], q[j]);
+				else
+					break;
+			}
+		}
+		assert(pp.r == p.r);
+	}
+}
+
+void IntroSortDual(class SortArray& A) { IntroSortDual(A, false); }
+
+void IntroSortDualStable(class SortArray& A) { IntroSortDual(A, true); }
+
+// ****************************************************************************
+// *** Septenary Stable Quicksort
+
+// by Jonathan Morton
 
 typedef struct {
 	size_t a,b,c,d,e,f,g;
@@ -1578,21 +1871,6 @@ PartitionCounts7 SeptenaryPartition(class SortArray& A, const SortRange& p,
 	return op;
 }
 
-void TernaryPartitionMerge(class SortArray& A, const SortRange& p,
-		size_t a, size_t b, size_t c, size_t aa, size_t bb, size_t cc)
-{
-	assert(a+b+c + aa+bb+cc == p.r - p.l);
-
-	if(b + bb > c + aa) {
-		A.rotate(p.l + a + b, p.l + a + b + c, p.l + a + b + c + aa);
-		A.rotate(p.l + a, p.l + a + b, p.l + a + b + aa);
-		A.rotate(p.r - cc - bb - c, p.r - cc - bb, p.r - cc);
-	} else {
-		A.rotate(p.l + a, p.l + a + b + c, p.r - cc);
-		A.rotate(p.l + a + aa, p.l + a + aa + bb, p.r - cc - c);
-	}
-}
-
 PartitionCounts7 SeptenaryStablePartition(class SortArray& A, const SortRange& p,
 		const value_type& pB, const value_type& pD, const value_type& pF)
 {
@@ -1728,7 +2006,7 @@ void SeptenaryQuickSort(class SortArray& A, bool stable)
 		A.mark(si[3], 6);
 		A.mark(si[5], 6);
 
-		// perform stable partition into seven around three pivots
+		// perform (stable?) partition into seven around three pivots
 		PartitionCounts7 parts = stable ?
 			SeptenaryStablePartition(A, p, pB, pD, pF) :
 			SeptenaryPartition      (A, p, pB, pD, pF);
