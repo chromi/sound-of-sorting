@@ -1735,6 +1735,21 @@ PartitionCounts7 SeptenaryPartition(class SortArray& A, const SortRange& p,
 					A.swap(rB.r++, i++, true);
 				}
 			} else if(cD > 0) {
+				// First check for right-side elements already on correct side
+				while(rF.l > j && A[j] > pD) {
+					int cF = A[j].cmp(pF);
+
+					if(cF < 0) {
+						A.mark(j++, 3);
+					} else if(cF > 0) {
+						A.mark(j, 3);
+						A.swap3(j, --rF.l, --rF.r, true);
+					} else {
+						A.mark(j, 6);
+						A.swap(j, --rF.l, true);
+					}
+				}
+
 				int cF = v.cmp(pF);
 
 				if(cF < 0) {
@@ -1783,6 +1798,21 @@ PartitionCounts7 SeptenaryPartition(class SortArray& A, const SortRange& p,
 			int cD = v.cmp(pD);
 
 			if(cD < 0) {
+				// First check for left-side elements already on correct side
+				while(rB.r < i && A[i-1] < pD) {
+					int cB = A[--i].cmp(pB);
+
+					if(cB < 0) {
+						A.mark(i, 3);
+						A.swap3(i++, rB.r++, rB.l++, true);
+					} else if(cB > 0) {
+						A.mark(i, 3);
+					} else {
+						A.mark(i, 6);
+						A.swap(rB.r++, i++, true);
+					}
+				}
+
 				int cB = v.cmp(pB);
 
 				if(cB < 0) {
