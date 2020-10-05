@@ -1705,177 +1705,194 @@ PartitionCounts7 SeptenaryPartition(class SortArray& A, const SortRange& p,
 	const size_t m = (p.r + p.l) / 2;
 	SortRange rB = { p.l, p.l }, rD = { m, m }, rF = { p.r, p.r };	// borders of equal-to-pivot partitions
 	size_t i=m, j=m;	// leading edges (from centre) of C and E partitions, trailing edges of open partitions
+	value_type vi = A[i-1], vj = A[j];
+	int cDi = vi.cmp(pD);
+	int cDj = vj.cmp(pD);
 
-	while(i > rB.r || j < rF.l) {
-		size_t di = i > rB.r ? i - rB.r : 0;
-		size_t dj = j < rF.l ? rF.l - j : 0;
+	while(i > rB.r && j < rF.l) {
+		// Both sides are open, find pair of elements on wrong sides and swap them
+		// Elements on correct side are moved behind correct leading edge on that side
 
-		if(di > dj) {
-			// take an item from the left open partition
-			const value_type& v = A[--i];
-			int cD = v.cmp(pD);
+		// First check for equality with middle pivot
+		while(cDi == 0) {
+			A.mark(--i, 6);
+			A.swap(i, --rD.l, true);
+			if(i <= rB.r)
+				break;
+			vi = A[i-1];
+			cDi = vi.cmp(pD);
+		}
+		while(cDj == 0) {
+			A.mark(j, 6);
+			A.swap(j++, rD.r++, true);
+			if(j >= rF.l)
+				break;
+			vj = A[j];
+			cDj = vj.cmp(pD);
+		}
 
-			if(cD < 0) {
-				int cB = v.cmp(pB);
+		// Deal with left-side elements on correct side
+		while(cDi < 0) {
+			int cB = vi.cmp(pB), cBB = 0;
 
-				if(cB < 0) {
-					A.mark(i, 3);	// A
-
-					// extend A partition
-					// advance B partition by one position to make room
-					A.swap3(i++, rB.r++, rB.l++, true);
-				} else if(cB > 0) {
-					A.mark(i, 3);	// C
-
-					// item already in position, pointer already adjusted
+			while(cB <= 0 && i > rB.r+1 && (cBB = A[rB.r].cmp(pB)) <= 0) {
+				// Extend left partitions
+				if(cBB < 0) {
+					A.mark(rB.r, 3);
+					A.swap(rB.r++, rB.l++, true);
 				} else {
-					A.mark(i, 6);	// B
-
-					// extend B partition
-					A.swap(rB.r++, i++, true);
+					A.mark(rB.r++, 6);
 				}
-			} else if(cD > 0) {
-				// First check for right-side elements already on correct side
-				while(rF.l > j && A[j] > pD) {
-					int cF = A[j].cmp(pF);
+			}
 
-					if(cF < 0) {
-						A.mark(j++, 3);
-					} else if(cF > 0) {
-						A.mark(j, 3);
-						A.swap3(j, --rF.l, --rF.r, true);
-					} else {
-						A.mark(j, 6);
-						A.swap(j, --rF.l, true);
-					}
-				}
-
-				int cF = v.cmp(pF);
-
-				if(cF < 0) {
-					A.mark(i, 3);	// E
-
-					// extend E partition...
-					if(rF.l > j) {
-						// ...to right, into open partition
-						A.swap(i++, j++, true);
-					} else {
-						// ...to left, moving D and C partitions
-						A.swap3(i, --rD.l, --rD.r, true);
-					}
-				} else if(cF > 0) {
-					A.mark(i, 3);	// G
-
-					// extend G partition to left
-					if(rF.l > j) {
-						// move F partition one place to left, into right open partition
-						A.swap3(i++, --rF.l, --rF.r, true);
-					} else {
-						// move contiguous C, D, E, and F partitions to left, into left open partition
-						A.swap5(i, --rD.l, --rD.r, --rF.l, --rF.r, true);
-					}
-				} else {
-					A.mark(i, 6);	// F
-
-					// extend F partition to left
-					if(rF.l > j) {
-						// extend directly into right open partition
-						A.swap(i++, --rF.l, true);
-					} else {
-						// right partitions are contiguous with middle ones, so shuffle them up
-						A.swap4(i, --rD.l, --rD.r, --rF.l, true);
-					}
-				}
+			if(cB < 0) {
+				A.mark(--i, 3);
+				A.swap3(i++, rB.r++, rB.l++, true);
+			} else if(cB > 0) {
+				A.mark(--i, 3);
 			} else {
-				A.mark(i, 6);	// D
+				A.mark(--i, 6);
+				A.swap(i++, rB.r++, true);
+			}
 
-				// extend D partition to left
-				A.swap(i, --rD.l, true);
+			if(i <= rB.r)
+				break;
+			vi = A[i-1];
+			cDi = vi.cmp(pD);
+		}
+
+		// Deal with right-side elements on correct side
+		while(cDj > 0) {
+			int cF = vj.cmp(pF), cFF = 0;
+
+			while(cF >= 0 && j+1 < rF.l && (cFF = A[rF.l-1].cmp(pF)) >= 0) {
+				// Extend right partitions
+				if(cFF > 0) {
+					A.mark(--rF.l, 3);
+					A.swap(rF.l, --rF.r, true);
+				} else {
+					A.mark(--rF.l, 6);
+				}
+			}
+
+			if(cF < 0) {
+				A.mark(j++, 3);
+			} else if(cF > 0) {
+				A.mark(j, 3);
+				A.swap3(j, --rF.l, --rF.r, true);
+			} else {
+				A.mark(j, 6);
+				A.swap(j, --rF.l, true);
+			}
+
+			if(j >= rF.l)
+				break;
+			vj = A[j];
+			cDj = vj.cmp(pD);
+		}
+
+		// Swap elements if both are on wrong side
+		if(cDi > 0 && cDj < 0) {
+			A.swap(i-1, j);
+			std::swap(vi, vj);
+			std::swap(cDi, cDj);
+		}
+	}
+
+	while(i > rB.r) {
+		// Only the left side is open
+		if(cDi < 0) {
+			int cB = vi.cmp(pB), cBB = 0;
+
+			while(cB <= 0 && i > rB.r+1 && (cBB = A[rB.r].cmp(pB)) <= 0) {
+				// Extend left partitions
+				if(cBB < 0) {
+					A.mark(rB.r, 3);
+					A.swap(rB.r++, rB.l++, true);
+				} else {
+					A.mark(rB.r++, 6);
+				}
+			}
+
+			if(cB < 0) {
+				A.mark(--i, 3);
+				A.swap3(i++, rB.r++, rB.l++, true);
+			} else if(cB > 0) {
+				A.mark(--i, 3);
+			} else {
+				A.mark(--i, 6);
+				A.swap(i++, rB.r++, true);
+			}
+		} else if(cDi > 0) {
+			int cF = vi.cmp(pF);
+
+			if(cF < 0) {
+				A.mark(--i, 3);
+				A.swap3(i, --rD.l, --rD.r, true);
+			} else if(cF > 0) {
+				A.mark(--i, 3);
+				A.swap5(i, --rD.l, --rD.r, --rF.l, --rF.r, true);
+			} else {
+				A.mark(--i, 6);
+				A.swap4(i, --rD.l, --rD.r, --rF.l, true);
 			}
 		} else {
-			// take an item from the right open partition
-			const value_type& v = A[j];
-			int cD = v.cmp(pD);
-
-			if(cD < 0) {
-				// First check for left-side elements already on correct side
-				while(rB.r < i && A[i-1] < pD) {
-					int cB = A[--i].cmp(pB);
-
-					if(cB < 0) {
-						A.mark(i, 3);
-						A.swap3(i++, rB.r++, rB.l++, true);
-					} else if(cB > 0) {
-						A.mark(i, 3);
-					} else {
-						A.mark(i, 6);
-						A.swap(rB.r++, i++, true);
-					}
-				}
-
-				int cB = v.cmp(pB);
-
-				if(cB < 0) {
-					A.mark(j, 3);	// A
-
-					// extend A partition to right
-					if(rB.r < i) {
-						// ...into left open partition
-						// move B partition right
-						A.swap3(j, rB.r++, rB.l++, true);
-					} else {
-						// ...into right open partition
-						A.swap5(j++, rD.r++, rD.l++, rB.r++, rB.l++, true);
-					}
-				} else if(cB > 0) {
-					A.mark(j, 3);	// C
-
-					if(rB.r < i) {
-						// extend C partition to left, into open partition
-						A.swap(--i, j, true);
-					} else {
-						// extend C partition to right, moving middle partitions
-						A.swap3(j++, rD.r++, rD.l++, true);
-					}
-				} else {
-					A.mark(j, 6);	// B
-
-					// extend B partition to right
-					if(rB.r < i) {
-						// ...into left open partition
-						A.swap(j, rB.r++, true);
-					} else {
-						// ...moving CDE right
-						A.swap4(j++, rD.r++, rD.l++, rB.r++, true);
-					}
-				}
-			} else if(cD > 0) {
-				int cF = v.cmp(pF);
-
-				if(cF < 0) {
-					A.mark(j, 3);	// E
-
-					// extend E partition to right - data item already in place
-					j++;
-				} else if(cF > 0) {
-					A.mark(j, 3);	// G
-
-					// extend G partition to left
-					// move F partition left
-					A.swap3(j, --rF.l, --rF.r, true);
-				} else {
-					A.mark(j, 6);	// F
-
-					// extend F partition to left
-					A.swap(j, --rF.l, true);
-				}
-			} else {
-				A.mark(j, 6);	// D
-
-				// extend D partition to right
-				A.swap(j++, rD.r++, true);
-			}
+			A.mark(--i, 6);
+			A.swap(i, --rD.l, true);
 		}
+
+		if(i <= rB.r)
+			break;
+		vi = A[i-1];
+		cDi = vi.cmp(pD);
+	}
+
+	while(j < rF.l) {
+		// Only the right side is open
+		if(cDj < 0) {
+			int cB = vj.cmp(pB);
+
+			if(cB < 0) {
+				A.mark(j, 3);
+				A.swap5(j++, rD.r++, rD.l++, rB.r++, rB.l++, true);
+			} else if(cB > 0) {
+				A.mark(j, 3);
+				A.swap3(j++, rD.r++, rD.l++, true);
+			} else {
+				A.mark(j, 6);
+				A.swap4(j++, rD.r++, rD.l++, rB.r++, true);
+			}
+		} else if(cDj > 0) {
+			int cF = vj.cmp(pF), cFF = 0;
+
+			while(cF >= 0 && j+1 < rF.l && (cFF = A[rF.l-1].cmp(pF)) >= 0) {
+				// Extend right partitions
+				if(cFF > 0) {
+					A.mark(--rF.l, 3);
+					A.swap(rF.l, --rF.r, true);
+				} else {
+					A.mark(--rF.l, 6);
+				}
+			}
+
+			if(cF < 0) {
+				A.mark(j++, 3);
+			} else if(cF > 0) {
+				A.mark(j, 3);
+				A.swap3(j, --rF.l, --rF.r, true);
+			} else {
+				A.mark(j, 6);
+				A.swap(j, --rF.l, true);
+			}
+		} else {
+			A.mark(j, 6);
+			A.swap(j++, rD.r++, true);
+		}
+
+		if(j >= rF.l)
+			break;
+		vj = A[j];
+		cDj = vj.cmp(pD);
 	}
 
 	ASSERT(i <= rB.r);
