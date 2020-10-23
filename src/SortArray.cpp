@@ -115,6 +115,8 @@ void SortArray::FillInputlist(wxArrayString& list)
 	list.Add(_("Shuffled Sinewave"));
 	list.Add(_("Ascending sqrt(n) Shuffled"));
 	list.Add(_("Ascending 10% Shuffled"));
+	list.Add(_("Organ Pipes"));
+	list.Add(_("Hoare Quicksort Killer"));
 }
 
 void SortArray::FillData(unsigned int schema, size_t arraysize)
@@ -266,6 +268,40 @@ void SortArray::FillData(unsigned int schema, size_t arraysize)
 			m_array[x] = tmp.back();
 			tmp.pop_back();
 		}
+	}
+	else if (schema == 11) // Organ Pipes
+	{
+		size_t i = 0, j = arraysize, k = 0;
+
+		while(i < j) {
+			if(k & 1)
+				m_array[i++] = ArrayItem(k++);
+			else
+				m_array[--j] = ArrayItem(k++);
+		}
+	}
+	else if (schema == 12) // Hoare Quicksort Killer
+	{
+		if(m_array.size() < 6)
+			m_array.resize(6);
+
+		m_array[0] = ArrayItem(1);
+		m_array[1] = ArrayItem(3);
+		m_array[2] = ArrayItem(5);
+		m_array[3] = ArrayItem(0);
+		m_array[4] = ArrayItem(2);
+		m_array[5] = ArrayItem(4);
+
+		for(size_t i=3; i < arraysize/2; i++) {
+			m_array[i*2] = m_array[i];
+			m_array[i*2+1] = ArrayItem(m_array[i*2-1].get_direct() + 2);
+			m_array[i] = ArrayItem(2*i+1);
+		}
+		if(arraysize & 1) {
+			m_array[arraysize-1] = m_array[arraysize/2];
+			m_array[arraysize/2] = ArrayItem(arraysize);
+		}
+		m_array.resize(arraysize);
 	}
 	else // fallback
 	{

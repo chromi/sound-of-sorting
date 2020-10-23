@@ -912,6 +912,22 @@ ssize_t QuickSortSelectPivot(SortArray& A, ssize_t lo, ssize_t hi)
 		: (A[mid] > A[hi-1] ? mid : (A[lo] < A[hi-1] ? lo : hi-1));
 	}
 
+	if (g_quicksort_pivot == PIVOT_MEDIAN3_RANDOM)
+	{
+		ssize_t s1 = lo + (rand() % (hi - lo));
+		ssize_t s2 = lo + (rand() % (hi - lo));
+		ssize_t s3 = lo + (rand() % (hi - lo));
+
+		// cases if two are equal
+		if (A[s1] == A[s2]) return s1;
+		if (A[s1] == A[s3] || A[s2] == A[s3]) return s3;
+
+		// cases if three are different
+		return A[s1] < A[s2]
+		? (A[s2] < A[s3] ? s2 : (A[s1] < A[s3] ? s3 : s1))
+		: (A[s2] > A[s3] ? s2 : (A[s1] < A[s3] ? s1 : s3));
+	}
+
 	if (g_quicksort_pivot == PIVOT_MEDIAN_MEDIANS)
 	{
 		return QuickSortMedianMedians(A, lo, hi);
@@ -929,6 +945,7 @@ wxArrayString QuickSortPivotText()
 	sl.Add( _("Middle Item") );
 	sl.Add( _("Random Item") );
 	sl.Add( _("Median of Three") );
+	sl.Add( _("Median of Three Random") );
 	sl.Add( _("Median of Medians") );
 
 	return sl;

@@ -71,7 +71,7 @@ void CataMergeSortStable(class SortArray& a);
 
 wxArrayString QuickSortPivotText();
 
-enum QuickSortPivotType { PIVOT_FIRST, PIVOT_LAST, PIVOT_MID, PIVOT_RANDOM, PIVOT_MEDIAN3, PIVOT_MEDIAN_MEDIANS };
+enum QuickSortPivotType { PIVOT_FIRST, PIVOT_LAST, PIVOT_MID, PIVOT_RANDOM, PIVOT_MEDIAN3, PIVOT_MEDIAN3_RANDOM, PIVOT_MEDIAN_MEDIANS };
 extern QuickSortPivotType g_quicksort_pivot;
 
 void QuickSortLR(class SortArray& a);
