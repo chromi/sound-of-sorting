@@ -27,6 +27,8 @@
 #include "SortArray.h"
 #include "SortAlgo.h"
 
+extern std::vector<size_t> ShellSortIncrements(size_t n, ShellSortIncrementType t);
+
 double g_delay = 0;
 
 class SortTestApp : public wxAppConsole
@@ -138,6 +140,18 @@ int SortTestApp::OnRun()
 
         wxPrintf(_T("\n"));
     }
+
+        wxPrintf(_T("\n\nShellsort gap sequences:\n"));
+
+	uint16_t t = SHELL_1959_SHELL;
+	while(1) {
+		std::vector<size_t> incs = ShellSortIncrements(65536, (ShellSortIncrementType) t++);
+		if(incs.size() < 2)
+			break;
+		for(size_t i=0; i < incs.size(); i++)
+			wxPrintf("%u, ", (unsigned int) incs[i]);
+		wxPrintf("...\n");
+	}
 
     return all_good ? 0 : -1;
 }

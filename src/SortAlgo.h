@@ -58,7 +58,6 @@ void CycleSort(class SortArray& a);
 
 void InsertionSort(class SortArray& a);
 void BinaryInsertionSort(class SortArray& a);
-void ShellSort(SortArray& a);
 
 void MergeSort(class SortArray& a);
 void MergeSortIterative(class SortArray& a);
@@ -107,12 +106,36 @@ enum ShellSortIncrementType {
 	SHELL_1991_GONNET,
 	SHELL_1992_TOKUDA,
 	SHELL_2001_CIURA,
+	SHELL_CIURA_TOKUDA,
+	SHELL_CIURA_PRATT,
 	SHELL_FIBONACCI,
 	SHELL_ROOT5_COPRIME,
 	SHELL_E_COPRIME,
 	SHELL_PI_COPRIME
 };
 extern ShellSortIncrementType g_shellsort_increment;
+
+void ShellSort(SortArray& a, ShellSortIncrementType t);
+
+static inline void ShellSort(SortArray& A)             { ShellSort(A, g_shellsort_increment); }
+static inline void ShellSort_Shell59(SortArray& A)     { ShellSort(A, SHELL_1959_SHELL); }
+static inline void ShellSort_Frank60(SortArray& A)     { ShellSort(A, SHELL_1960_FRANK); }
+static inline void ShellSort_Hibbard63(SortArray& A)   { ShellSort(A, SHELL_1963_HIBBARD); }
+static inline void ShellSort_Papernov65(SortArray& A)  { ShellSort(A, SHELL_1965_PAPERNOV); }
+static inline void ShellSort_Pratt71(SortArray& A)     { ShellSort(A, SHELL_1971_PRATT); }
+static inline void ShellSort_Knuth73(SortArray& A)     { ShellSort(A, SHELL_1973_KNUTH); }
+static inline void ShellSort_Sedgewick82(SortArray& A) { ShellSort(A, SHELL_1982_SEDGEWICK); }
+static inline void ShellSort_Incerpi85(SortArray& A)   { ShellSort(A, SHELL_1985_INCERPI); }
+static inline void ShellSort_Sedgewick86(SortArray& A) { ShellSort(A, SHELL_1986_SEDGEWICK); }
+static inline void ShellSort_Gonnet91(SortArray& A)    { ShellSort(A, SHELL_1991_GONNET); }
+static inline void ShellSort_Tokuda92(SortArray& A)    { ShellSort(A, SHELL_1992_TOKUDA); }
+static inline void ShellSort_Ciura2001(SortArray& A)   { ShellSort(A, SHELL_2001_CIURA); }
+static inline void ShellSort_CiuraTokuda(SortArray& A) { ShellSort(A, SHELL_CIURA_TOKUDA); }
+static inline void ShellSort_CiuraPratt(SortArray& A)  { ShellSort(A, SHELL_CIURA_PRATT); }
+static inline void ShellSort_Fibonacci(SortArray& A)     { ShellSort(A, SHELL_FIBONACCI); }
+static inline void ShellSort_Root5_Coprime(SortArray& A) { ShellSort(A, SHELL_ROOT5_COPRIME); }
+static inline void ShellSort_e_Coprime(SortArray& A)     { ShellSort(A, SHELL_E_COPRIME); }
+static inline void ShellSort_pi_Coprime(SortArray& A)    { ShellSort(A, SHELL_PI_COPRIME); }
 
 void HeapSort(class SortArray& a);
 void SmoothSort(class SortArray& a);
