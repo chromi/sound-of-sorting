@@ -353,7 +353,7 @@
                                                         <object class="wxSlider" name="arraySizeSlider" base="EditSlider">
                                                             <style>wxSL_HORIZONTAL</style>
                                                             <id>ID_ARRAY_SIZE_SLIDER=?</id>
-                                                            <range>1, 2048</range>
+                                                            <range>1, 4096</range>
                                                         </object>
                                                     </object>
                                                     <object class="sizeritem">

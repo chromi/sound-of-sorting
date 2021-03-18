@@ -361,9 +361,9 @@ void WMain::OnArraySizeSliderChange(wxScrollEvent &event)
 
 void WMain::SetArraySize(size_t pos)
 {
-	// scale slider with this base to 2048
+	// scale slider with this base to 4096
 	//const double base = 2;
-	//m_array_size = pow(base, pos / 10000.0 * log(2048) / log(base));
+	//m_array_size = pow(base, pos / 10000.0 * log(4096) / log(base));
 	m_array_size = pos;
 
 	labelArraySizeValue->SetLabel(wxString::Format(_("%4lu"), (long unsigned)m_array_size));

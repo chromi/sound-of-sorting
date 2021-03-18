@@ -44,7 +44,7 @@ WMain_wxg::WMain_wxg(wxWindow* parent, int id, const wxString& title, const wxPo
 	labelRunsCount = new wxClickText(splitter_0_pane_2, wxID_ANY, wxEmptyString);
 	const wxString *inputTypeChoice_choices = NULL;
 	inputTypeChoice = new wxChoice(splitter_0_pane_2, wxID_ANY, wxDefaultPosition, wxDefaultSize, 0, inputTypeChoice_choices, 0);
-	arraySizeSlider = new wxSlider(splitter_0_pane_2, ID_ARRAY_SIZE_SLIDER, 0, 1, 2048);
+	arraySizeSlider = new wxSlider(splitter_0_pane_2, ID_ARRAY_SIZE_SLIDER, 0, 1, 4096);
 	labelArraySizeValue = new wxStaticText(splitter_0_pane_2, wxID_ANY, _("1024"), wxDefaultPosition, wxDefaultSize, wxALIGN_CENTRE|wxST_NO_AUTORESIZE);
 	const wxString *algoList_choices = NULL;
 	algoList = new wxListBox(splitter_0_pane_2, ID_ALGO_LIST, wxDefaultPosition, wxDefaultSize, 0, algoList_choices, wxLB_SINGLE);
