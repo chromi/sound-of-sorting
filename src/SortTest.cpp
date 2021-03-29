@@ -58,8 +58,8 @@ static size_t testsize[] = {
     100, 101, 102, 103, 200,
     1024, 1337, 1627, 2048,
     3000, 4000, 7000, 9001, 10240,
-    12000, 16000, 23456, 34567, 65535,
-    0
+    12000, 16000, 23456, 34567, 65536,
+    234567, 1000000, 0
 };
 
 struct SortedCheck
@@ -136,6 +136,7 @@ int SortTestApp::OnRun()
                 wxPrintf(_T("%lu/i%lu -> %lu ms. "), n, inputi, millitime);
                 fflush(stdout);
             }
+            wxPrintf(_T("\n"));
         }
 
         wxPrintf(_T("\n"));

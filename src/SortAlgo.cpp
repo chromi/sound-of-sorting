@@ -68,41 +68,43 @@ const struct AlgoEntry g_algolist[] =
 	{ _("Shell Sort (Pratt 1971)"), &ShellSort_Pratt71,
 	UINT_MAX, UINT_MAX, _("Gap sequence: 1, 2, 3, 4, 6, 8, 9, 12, ...\n(2^p)*(3^q)") },
 	{ _("Shell Sort (Knuth 1973)"), &ShellSort_Knuth73,
-	UINT_MAX, UINT_MAX, _("Gap sequence: 1, 4, 13, 40, 121, ...\n(3^k - 1) / 2") },
+	UINT_MAX, UINT_MAX, _("Gap sequence: 1, 4, 13, 40, 121, 364, 1093, 3280, ...\n(3^k - 1) / 2") },
 	{ _("Shell Sort (Sedgewick 1982)"), &ShellSort_Sedgewick82,
-	UINT_MAX, UINT_MAX, _("Gap sequence: 1, 8, 23, 77, 281, ...\n4^k + 3*2^(k-1) + 1") },
+	UINT_MAX, UINT_MAX, _("Gap sequence: 1, 8, 23, 77, 281, 1073, 4193, ...\n4^k + 3*2^(k-1) + 1") },
 	{ _("Shell Sort (Incerpi-Sedgewick 1985)"), &ShellSort_Incerpi85,
-	UINT_MAX, UINT_MAX, _("Gap sequence: 1, 3, 7, 21, 48, 112, ...") },
+	UINT_MAX, UINT_MAX, _("Gap sequence: 1, 3, 7, 21, 48, 112, 336, 861, 1968, ...") },
 	{ _("Shell Sort (Sedgewick 1986)"), &ShellSort_Sedgewick86,
-	UINT_MAX, UINT_MAX, _("Gap sequence: 1, 5, 19, 41, 109, ...\nEven k: 9*(2^k - 2^(k/2)) + 1\nOdd k: 8*2^k - 6*2^((k+1)/2) + 1") },
+	UINT_MAX, UINT_MAX, _("Gap sequence: 1, 5, 19, 41, 109, 209, 505, 929, 2161, 3905, ...\nEven k: 9*(2^k - 2^(k/2)) + 1\nOdd k: 8*2^k - 6*2^((k+1)/2) + 1") },
 	{ _("Shell Sort (Gonnet 1991)"), &ShellSort_Gonnet91,
 	UINT_MAX, UINT_MAX, _("Gap sequence: floor(N * 5/11), ...") },
 	{ _("Shell Sort (Tokuda 1992)"), &ShellSort_Tokuda92,
-	UINT_MAX, UINT_MAX, _("Gap sequence: 1, 4, 9, 20, 46, 103, ...\nf(k)=f(k-1)*2.25+1 | ceil(f(k))") },
+	UINT_MAX, UINT_MAX, _("Gap sequence: 1, 4, 9, 20, 46, 103, 233, 525, 1182, 2660, ...\nf(k)=f(k-1)*2.25+1 | ceil(f(k))") },
 	{ _("Shell Sort (Ciura 2001)"), &ShellSort_Ciura2001,
-	UINT_MAX, UINT_MAX, _("Gap sequence: 1, 4, 10, 23, 57, 132, 301, 701") },
+	65536,    UINT_MAX, _("Gap sequence: 1, 4, 10, 23, 57, 132, 301, 701") },
 	{ _("Shell Sort (Ciura-Tokuda)"), &ShellSort_CiuraTokuda,
 	UINT_MAX, UINT_MAX, _("Gap sequence: 1, 4, 10, 23, 57, 132, 301, 701, 1579, 3553, ...\nCiura sequence extended by Tokuda formula") },
 	{ _("Shell Sort (Ciura-Pratt)"), &ShellSort_CiuraPratt,
 	UINT_MAX, UINT_MAX, _("Gap sequence: 1, 4, 10, 23, 57, 132, 301, 701, 1311, 3249, ...\nCiura sequence extended with Pratt-type (23^p)*(57^q) sequence") },
 	{ _("Shell Sort (Ciura-Fibonacci)"), &ShellSort_CiuraFibonacci,
 	UINT_MAX, UINT_MAX, _("Gap sequence: 1, 4, 10, 23, 57, 132, 301, 701, 1002, 1703, 2705, ...\nCiura sequence extended with Fibonacci sequence") },
+	{ _("Shell Sort (Ciura-Fibonacci squared)"), &ShellSort_CiuraFibonacci2,
+	UINT_MAX, UINT_MAX, _("Gap sequence: 1, 4, 10, 23, 57, 132, 301, 701, 1849, 4761, ...\nCiura sequence extended with squared Fibonacci sequence") },
+	{ _("Shell Sort (Ciura-Fibonacci cubed)"), &ShellSort_CiuraFibonacci3,
+	UINT_MAX, UINT_MAX, _("Gap sequence: 1, 4, 10, 23, 57, 132, 301, 701, 4096, ...\nCiura sequence extended with cubed Fibonacci sequence") },
+	{ _("Shell Sort (Ciura, sqrt(5) coprime)"), &ShellSort_CiuraRoot5,
+	UINT_MAX, UINT_MAX, _("Gap sequence: 1, 4, 10, 23, 57, 132, 301, 701, 1567, 3503, ...\nCiura sequence extended with coprime sequence") },
 	{ _("Shell Sort (sqrt(5) coprime)"), &ShellSort_Root5_Coprime,
-	UINT_MAX, UINT_MAX, _("Gap sequence: 1, 5, 11, 24, 53, 119, 269, ...\nratio approx sqrt(5), gaps mutually coprime") },
+	UINT_MAX, UINT_MAX, _("Gap sequence: 1, 5, 11, 24, 53, 119, 269, 601, 1339, 2993, ...\nratio approx sqrt(5), gaps mutually coprime") },
 	{ _("Shell Sort (e coprime)"), &ShellSort_e_Coprime,
-	UINT_MAX, UINT_MAX, _("Gap sequence: 1, 7, 19, 52, 141, 383, ...\nratio approx e, gaps mutually coprime") },
+	UINT_MAX, UINT_MAX, _("Gap sequence: 1, 7, 19, 52, 141, 383, 1039, 2825, ...\nratio approx e, gaps mutually coprime") },
 	{ _("Shell Sort (pi coprime)"), &ShellSort_pi_Coprime,
-	UINT_MAX, UINT_MAX, _("Gap sequence: 1, 6, 19, 59, 185, 581, ...\nratio approx pi, gaps mutually coprime") },
+	UINT_MAX, UINT_MAX, _("Gap sequence: 1, 6, 19, 59, 185, 581, 1823, ...\nratio approx pi, gaps mutually coprime") },
 	{ _("Shell Sort (Fibonacci)"), &ShellSort_Fibonacci,
-	UINT_MAX, UINT_MAX, _("Gap sequence: 1, 2, 3, 5, 8, 13, 21, 34, 55, ...") },
+	UINT_MAX, UINT_MAX, _("Gap sequence: 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, ...") },
 	{ _("Shell Sort (Fibonacci squared)"), &ShellSort_FibonacciSquared,
-	UINT_MAX, UINT_MAX, _("Gap sequence: 1, 4, 9, 25, 64, 169, 441, ...") },
+	UINT_MAX, UINT_MAX, _("Gap sequence: 1, 4, 9, 25, 64, 169, 441, 1156, 3025, ...") },
 	{ _("Shell Sort (Fibonacci cubed)"), &ShellSort_FibonacciCubed,
 	UINT_MAX, UINT_MAX, _("Gap sequence: 1, 8, 27, 125, 512, 2197, ...") },
-	{ _("Shell Sort (squared primes)"), &ShellSort_SquarePrimes,
-	UINT_MAX, UINT_MAX, _("Gap sequence: 1, 4, 9, 25, 49, 121, 169, ...") },
-	{ _("Shell Sort (prime pair products)"), &ShellSort_PrimePairProducts,
-	UINT_MAX, UINT_MAX, _("Gap sequence: 1, 6, 15, 35, 77, 143, ...") },
 
 	{ _("Merge Sort"), &MergeSort, UINT_MAX, UINT_MAX,
 	_("Merge sort which merges two sorted sequences into a shadow array,"
@@ -127,11 +129,11 @@ const struct AlgoEntry g_algolist[] =
 	_("Quick sort variant with left and right pointers.") },
 	{ _("Quick Sort (LL ptrs)"), &QuickSortLL, 16384, UINT_MAX,
 	_("Quick sort variant from 3rd edition of CLRS: two pointers on left.") },
-	{ _("Quick Sort (ternary, LR ptrs)"), &QuickSortTernaryLR, UINT_MAX, UINT_MAX,
+	{ _("Quick Sort (ternary, LR ptrs)"), &QuickSortTernaryLR, 16384, UINT_MAX,
 	_("Ternary-split quick sort variant, adapted from multikey quicksort by "
 		"Bentley & Sedgewick: partitions \"=<?>=\" using two pairs of pointers "
 		"at left and right, then copied to middle.") },
-	{ _("Quick Sort (ternary, LL ptrs)"), &QuickSortTernaryLL, UINT_MAX, UINT_MAX,
+	{ _("Quick Sort (ternary, LL ptrs)"), &QuickSortTernaryLL, 16384, UINT_MAX,
 	_("Ternary-split quick sort variant: partitions \"<>?=\" using two "
 		"pointers at left and one at right. Afterwards copies the \"=\" to middle.") },
 	{ _("Quick Sort (dual pivot)"), &QuickSortDualPivot, UINT_MAX, UINT_MAX,
@@ -160,7 +162,14 @@ const struct AlgoEntry g_algolist[] =
 	wxEmptyString },
 	{ _("Gnome Sort"), &GnomeSort, 10240, UINT_MAX,
 	wxEmptyString },
-	{ _("Comb Sort"), &CombSort, UINT_MAX, UINT_MAX,
+
+	{ _("Comb Sort (1/1.3)"), &CombSort, UINT_MAX, UINT_MAX,
+	wxEmptyString },
+	{ _("Comb Sort (Pratt 1973)"), &CombSortPratt, UINT_MAX, UINT_MAX,
+	wxEmptyString },
+	{ _("Comb Sort (Fibonacci)"), &CombSortFibonacci, 250000, UINT_MAX,
+	wxEmptyString },
+	{ _("Groom Sort (Fibonacci)"), &GroomSort, UINT_MAX, UINT_MAX,
 	wxEmptyString },
 
 	{ _("Heap Sort"), &HeapSort, UINT_MAX, UINT_MAX,
@@ -169,7 +178,7 @@ const struct AlgoEntry g_algolist[] =
 	wxEmptyString },
 	{ _("Splay Sort"), &SplaySort, UINT_MAX, UINT_MAX,
 	wxEmptyString },
-	{ _("Splay Shake Sort"), &SplayShakeSort, UINT_MAX, UINT_MAX,
+	{ _("Splay Shake Sort"), &SplayShakeSort, 65536, UINT_MAX,
 	wxEmptyString },
 
 	{ _("Odd-Even Sort"), &OddEvenSort, 10240, UINT_MAX,
@@ -2266,29 +2275,6 @@ void GnomeSort(SortArray& A)
 }
 
 // ****************************************************************************
-// *** Comb Sort
-
-// from http://en.wikipediA.org/wiki/Comb_sort
-
-void CombSort(SortArray& A)
-{
-	const double shrink = 1.3;
-	size_t gap = A.size();
-
-	while (gap > 1)
-	{
-		gap = (size_t)(gap / shrink);
-
-		for (size_t i = 0; gap + i < A.size(); ++i)
-			if (A[i] > A[i + gap])
-				A.swap(i, i+gap);
-	}
-
-	// This prevents the end from looking like bubblesort.
-	InsertionSort(A);
-}
-
-// ****************************************************************************
 // *** Odd-Even Sort
 
 // from http://en.wikipediA.org/wiki/Odd%E2%80%93even_sort
@@ -2501,6 +2487,9 @@ std::vector<size_t> ShellSortIncrements(size_t n, ShellSortIncrementType t)
 		case SHELL_2001_CIURA:
 		case SHELL_CIURA_TOKUDA:
 		case SHELL_CIURA_FIBONACCI:
+		case SHELL_CIURA_FIBONACCI2:
+		case SHELL_CIURA_FIBONACCI3:
+		case SHELL_CIURA_ROOT5:
 		case SHELL_CIURA_PRATT: {
 		// worst-case complexity unknown; designed for average-case performance
 		// not generated by a formula, but through empirical testing
@@ -2540,6 +2529,70 @@ std::vector<size_t> ShellSortIncrements(size_t n, ShellSortIncrementType t)
 					a = b;
 					b = c;
 					c = a+b;
+				}
+			} else if(t == SHELL_CIURA_FIBONACCI2) {
+				size_t a = nearbyint(sqrt(301)), b = nearbyint(sqrt(701)), c = a+b;
+				while(c < n) {
+					incs.push_back(c*c);
+					a = b;
+					b = c;
+					c = a+b;
+				}
+			} else if(t == SHELL_CIURA_FIBONACCI3) {
+				size_t a = nearbyint(cbrt(301)), b = nearbyint(cbrt(701)), c = a+b;
+				while(c < n) {
+					incs.push_back(c*c*c);
+					a = b;
+					b = c;
+					c = a+b;
+				}
+			} else if(t == SHELL_CIURA_ROOT5) {
+				const double root5 = sqrt(5);
+				size_t i = 701, j = 701;
+
+				while(i < n) {
+					double x = i * root5;
+					i = floor(x);
+					j = ceil(x);
+
+					bool coprime;
+					do {
+						coprime = true;
+						for(auto z = incs.begin(); z != incs.end(); z++) {
+							size_t c = i, d = *z;
+							while(d) {
+								size_t e = c % d;
+								c = d;
+								d = e;
+							}
+							if(c > 1) {
+								i--;
+								coprime = false;
+							}
+						}
+					} while(!coprime);
+
+					do {
+						coprime = true;
+						for(auto z = incs.begin(); z != incs.end(); z++) {
+							size_t c = j, d = *z;
+							while(d) {
+								size_t e = c % d;
+								c = d;
+								d = e;
+							}
+							if(c > 1) {
+								j++;
+								coprime = false;
+							}
+						}
+					} while(!coprime);
+
+					// pick coprime candidate closest to exact ratio
+					if(x-i > j-x)
+						i = j;
+
+					incs.push_back(i);
 				}
 			}
 
@@ -2584,31 +2637,6 @@ std::vector<size_t> ShellSortIncrements(size_t n, ShellSortIncrementType t)
 				i = j;
 				j = k;
 				k = i+j;
-			}
-			break;
-		}
-
-		case SHELL_SQUARE_PRIMES:
-		case SHELL_PRIME_PAIR_PRODUCTS: {
-			// generate a list of primes
-			std::vector<size_t> primes;
-			primes.push_back(2);
-			for(size_t p=3; p*p < n; p += 2) {
-				bool prime = true;
-				for(size_t i=0; prime && i < primes.size() && primes[i]*primes[i] < p; i++)
-					if(!(p % primes[i]))
-						prime = false;
-				if(prime)
-					primes.push_back(p);
-			}
-
-			incs.push_back(1);
-			if(t == SHELL_SQUARE_PRIMES) {
-				for(size_t i=0; i < primes.size(); i++)
-					incs.push_back(primes[i] * primes[i]);
-			} else {
-				for(size_t i=1; i < primes.size(); i++)
-					incs.push_back(primes[i] * primes[i-1]);
 			}
 			break;
 		}
@@ -2816,6 +2844,81 @@ void ShellSort(SortArray& A, ShellSortIncrementType t)
 			}
 		}
 	}
+}
+
+// ****************************************************************************
+// *** Comb Sort
+
+// from http://en.wikipediA.org/wiki/Comb_sort
+
+void CombSort(SortArray& A)
+{
+	const double shrink = 1.3;
+	size_t gap = A.size();
+
+	while (gap > 1)
+	{
+		gap = (size_t)(gap / shrink);
+
+		for (size_t i = 0; gap + i < A.size(); ++i)
+			if (A[i] > A[i + gap])
+				A.swap(i, i+gap);
+	}
+
+	// This prevents the end from looking like bubblesort.
+	InsertionSort(A);
+}
+
+void CombSortPratt(SortArray& A)
+{
+	std::vector<size_t> gaps = ShellSortIncrements(A.size(), SHELL_1971_PRATT);
+
+	do {
+		size_t gap = gaps.back(); gaps.pop_back();
+
+		for (size_t i = gap; i < A.size(); ++i)
+			if (A[i] < A[i-gap])
+				A.swap(i, i-gap);
+	} while(gaps.size());
+}
+
+void CombSortFibonacci(SortArray& A)
+{
+	std::vector<size_t> gaps = ShellSortIncrements(A.size(), SHELL_FIBONACCI);
+
+	do {
+		size_t gap = gaps.back(); gaps.pop_back();
+		if(gap == 1) break;
+
+		for (size_t i = gap; i < A.size(); ++i)
+			if (A[i] < A[i-gap])
+				A.swap(i, i-gap);
+	} while(gaps.size());
+
+	// This prevents the end from looking like bubblesort.
+	InsertionSort(A);
+}
+
+void GroomSort(SortArray& A)
+{
+	std::vector<size_t> gaps = ShellSortIncrements(A.size(), SHELL_FIBONACCI);
+
+	do {
+		size_t gap = gaps.back(); gaps.pop_back();
+		size_t i;
+		if(gap == 1) break;
+
+		for (i = gap; i < A.size(); ++i)
+			if (A[i] < A[i-gap])
+				A.swap(i, i-gap);
+
+		for (i = A.size() - gap; i > gap; i--)
+			if (A[i] < A[i-gap])
+				A.swap(i, i-gap);
+	} while(gaps.size());
+
+	// This prevents the end from looking like cocktail-shaker sort.
+	InsertionSort(A);
 }
 
 // ****************************************************************************
