@@ -185,9 +185,9 @@ const struct AlgoEntry g_algolist[] =
 	wxEmptyString },
 	// older sequential implementation, which really makes little sense to do
 	//{ _("Bitonic Sort"), &BitonicSort, UINT_MAX, UINT_MAX, wxEmptyString },
-	{ _("Batcher's Bitonic Sort"), &BitonicSortNetwork, UINT_MAX, UINT_MAX,
+	{ _("Batcher's Bitonic Sort"), &BitonicSortNetwork, 250000, UINT_MAX,
 	wxEmptyString },
-	{ _("Batcher's Odd-Even Merge Sort"), &BatcherSortNetwork, UINT_MAX, UINT_MAX,
+	{ _("Batcher's Odd-Even Merge Sort"), &BatcherSortNetwork, 250000, UINT_MAX,
 	wxEmptyString },
 	{ _("Cycle Sort"), &CycleSort, 10240, UINT_MAX,
 	wxEmptyString },
