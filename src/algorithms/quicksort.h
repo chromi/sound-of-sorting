@@ -44,3 +44,5 @@ void IntroSortDual(class SortArray& a);
 void IntroSortDualStable(class SortArray& a);
 void SeptenaryQuickSort(class SortArray& a);
 void SeptenaryStableQuickSort(class SortArray& a);
+
+void StlSort(class SortArray& a);

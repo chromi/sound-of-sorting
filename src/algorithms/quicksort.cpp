@@ -615,6 +615,8 @@ void IntroSort(class SortArray& A)
 
 // by Jonathan Morton
 
+#include "algorithms/heap.h"
+
 typedef struct {
 	size_t l,r;
 } SortRange;

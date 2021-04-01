@@ -553,6 +553,9 @@ void CataMergeSortStable(SortArray& A)
 	CataMergeSort(A, true);
 }
 
+
+#include "algorithms/heap.h"
+
 void SplayMergeSort(SortArray& A)
 {
 	std::vector<size_t> runs = Splay::runs(A);

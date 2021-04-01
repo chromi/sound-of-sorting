@@ -8,6 +8,7 @@ COMMON = SortArray.cpp SortArray.h \
 	algorithms/insertion.cpp \
 	algorithms/quicksort.cpp \
 	algorithms/merge.cpp \
+	algorithms/heap.cpp \
 	algorithms/timsort.cpp \
 	algorithms/wikisort.cpp
 

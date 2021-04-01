@@ -58,26 +58,12 @@ void CycleSort(class SortArray& a);
 
 void OddEvenSort(class SortArray& a);
 
-void HeapSort(class SortArray& a);
-void SmoothSort(class SortArray& a);
-void SplaySort(class SortArray& a);
-void SplaySort(class SortArray& A, size_t l, size_t r);
-void SplayShakeSort(class SortArray& a);
-void SplayShakeSort(class SortArray& a, size_t m);
-
 void BitonicSort(SortArray& a);
 void BitonicSortNetwork(SortArray& a);
 void BatcherSortNetwork(SortArray& a);
 
 void RadixSortLSD(class SortArray& a);
 void RadixSortMSD(class SortArray& a);
-
-void StlSort(class SortArray& a);
-void StlStableSort(class SortArray& a);
-void StlHeapSort(class SortArray& a);
-
-void TimSort(class SortArray& a);
-void WikiSort(class SortArray& a);
 
 void BogoSort(class SortArray& a);
 void BozoSort(class SortArray& a);

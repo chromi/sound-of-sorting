@@ -1,7 +1,7 @@
 /******************************************************************************
- * src/algorithms/merge.h
+ * src/algorithms/heap.h
  *
- * Implementations of merge-based sorting algorithms.
+ * Implementations of heap- and tree-based sorting algorithms.
  *
  * Note that these implementations may not be as good/fast as possible. Some
  * are modified so that the visualization is more instructive.
@@ -28,18 +28,11 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  *****************************************************************************/
 
-void MergeSort(class SortArray& a);
-void MergeSortIterative(class SortArray& a);
-void MergeSortInPlace(class SortArray& a);
-void MergeSortSemiInPlace(class SortArray& a);
+void HeapSort(class SortArray& a);
+void SmoothSort(class SortArray& a);
+void SplaySort(class SortArray& a);
+void SplaySort(class SortArray& A, size_t l, size_t r);
+void SplayShakeSort(class SortArray& a);
+void SplayShakeSort(class SortArray& a, size_t m);
 
-void CataMergeSort(class SortArray& a);
-void CataMergeSortStable(class SortArray& a);
-
-void SplayMergeSort(class SortArray& a);
-
-// the following are not in merge.cpp but have their own implementation files
-void TimSort(class SortArray& a);
-void WikiSort(class SortArray& a);
-
-void StlStableSort(class SortArray& a);
+void StlHeapSort(class SortArray& a);
