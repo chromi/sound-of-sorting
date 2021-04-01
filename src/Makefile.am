@@ -12,6 +12,7 @@ COMMON = SortArray.cpp SortArray.h \
 	algorithms/parallel.cpp \
 	algorithms/radix.cpp \
 	algorithms/selection.cpp \
+	algorithms/pathological.cpp \
 	algorithms/timsort.cpp \
 	algorithms/wikisort.cpp
 

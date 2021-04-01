@@ -50,13 +50,6 @@ extern const struct AlgoEntry g_algolist[];
 extern const size_t g_algolist_size;
 extern const struct AlgoEntry* g_algolist_end;
 
-// *** Sorting Algorithms
-
-void BogoSort(class SortArray& a);
-void BozoSort(class SortArray& a);
-void StoogeSort(class SortArray& a);
-void SlowSort(class SortArray& a);
-
 // ****************************************************************************
 // *** Iterator Adapter
 
