@@ -65,23 +65,6 @@ void SplayMergeSort(class SortArray& a);
 void CataMergeSort(class SortArray& a);
 void CataMergeSortStable(class SortArray& a);
 
-wxArrayString QuickSortPivotText();
-
-enum QuickSortPivotType { PIVOT_FIRST, PIVOT_LAST, PIVOT_MID, PIVOT_RANDOM, PIVOT_MEDIAN3, PIVOT_MEDIAN3_RANDOM, PIVOT_MEDIAN_MEDIANS };
-extern QuickSortPivotType g_quicksort_pivot;
-
-void QuickSortLR(class SortArray& a);
-void QuickSortLL(class SortArray& a);
-void QuickSortTernaryLR(class SortArray& a);
-void QuickSortTernaryLL(class SortArray& a);
-void QuickSortDualPivot(class SortArray& a);
-
-void IntroSort(class SortArray& a);
-void IntroSortDual(class SortArray& a);
-void IntroSortDualStable(class SortArray& a);
-void SeptenaryQuickSort(class SortArray& a);
-void SeptenaryStableQuickSort(class SortArray& a);
-
 void OddEvenSort(class SortArray& a);
 
 void HeapSort(class SortArray& a);
