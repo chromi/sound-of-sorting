@@ -7,6 +7,7 @@ COMMON = SortArray.cpp SortArray.h \
 	SortAlgo.cpp SortAlgo.h \
 	algorithms/insertion.cpp \
 	algorithms/quicksort.cpp \
+	algorithms/merge.cpp \
 	algorithms/timsort.cpp \
 	algorithms/wikisort.cpp
 

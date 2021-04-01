@@ -56,15 +56,6 @@ void SelectionSort(class SortArray& a);
 void DualSelectionSort(class SortArray& a);
 void CycleSort(class SortArray& a);
 
-void MergeSort(class SortArray& a);
-void MergeSortIterative(class SortArray& a);
-void MergeSortInPlace(class SortArray& a);
-void MergeSortSemiInPlace(class SortArray& a);
-void SplayMergeSort(class SortArray& a);
-
-void CataMergeSort(class SortArray& a);
-void CataMergeSortStable(class SortArray& a);
-
 void OddEvenSort(class SortArray& a);
 
 void HeapSort(class SortArray& a);
