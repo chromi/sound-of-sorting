@@ -1,5 +1,7 @@
 # $Id: Makefile.am 2 2007-01-05 14:04:27Z tb $
 
+AUTOMAKE_OPTIONS = subdir-objects
+
 bin_PROGRAMS = sound-of-sorting
 
 COMMON = SortArray.cpp SortArray.h \
