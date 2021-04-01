@@ -5,6 +5,7 @@ bin_PROGRAMS = sound-of-sorting
 COMMON = SortArray.cpp SortArray.h \
 	SortSound.cpp \
 	SortAlgo.cpp SortAlgo.h \
+	algorithms/insertion.cpp \
 	algorithms/timsort.cpp \
 	algorithms/wikisort.cpp
 
