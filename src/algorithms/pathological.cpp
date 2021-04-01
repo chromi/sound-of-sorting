@@ -28,6 +28,9 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  *****************************************************************************/
 
+#include "SortAlgo.h"
+#include "algorithms/pathological.h"
+
 // ****************************************************************************
 // *** BogoSort and more slow sorts
 

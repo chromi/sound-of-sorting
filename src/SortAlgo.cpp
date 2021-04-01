@@ -43,13 +43,9 @@
 #include "algorithms/pathological.h"
 
 #include <algorithm>
-#include <numeric>
 #include <limits>
-#include <random>
 #include <vector>
 #include <inttypes.h>
-
-typedef ArrayItem value_type;
 
 // inversion count limit for iterator instrumented algorithms
 const unsigned int inversion_count_instrumented = 512;

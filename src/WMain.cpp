@@ -22,6 +22,8 @@
 
 #include "WMain.h"
 #include "SortAlgo.h"
+#include "algorithms/quicksort.h"
+
 #include <SDL.h>
 
 #include "wxg/WAbout_wxg.h"

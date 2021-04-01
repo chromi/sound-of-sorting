@@ -26,6 +26,7 @@
 
 #include "SortArray.h"
 #include "SortAlgo.h"
+#include "algorithms/insertion.h"
 
 extern std::vector<size_t> ShellSortIncrements(size_t n, ShellSortIncrementType t);
 

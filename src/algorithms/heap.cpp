@@ -36,25 +36,6 @@
 
 // heavily adapted from http://www.codecodex.com/wiki/Heapsort
 
-bool isPowerOfTwo(size_t x)
-{
-	return ((x != 0) && !(x & (x - 1)));
-}
-
-uint32_t prevPowerOfTwo(uint32_t x)
-{
-	x |= x >> 1; x |= x >> 2; x |= x >> 4;
-	x |= x >> 8; x |= x >> 16;
-	return x - (x >> 1);
-}
-
-int largestPowerOfTwoLessThan(int n)
-{
-	int k = 1;
-	while (k < n) k = k << 1;
-	return k >> 1;
-}
-
 void HeapSort(SortArray& A)
 {
 	size_t n = A.size(), i = n / 2;
@@ -809,3 +790,7 @@ void SplayShakeSort(SortArray& A, size_t m)
 	Splay::shake(A, 0, A.size(), m);
 }
 
+std::vector<size_t> SplayCollectRuns(SortArray& A, size_t m)
+{
+	return Splay::runs(A, m);
+}

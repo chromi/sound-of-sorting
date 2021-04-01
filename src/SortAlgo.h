@@ -138,5 +138,25 @@ public:
 	{ ASSERT(m_array == r2.m_array); return (m_pos - r2.m_pos); }
 };
 
+typedef ArrayItem value_type;
+
+static inline bool isPowerOfTwo(size_t x)
+{
+	return ((x != 0) && !(x & (x - 1)));
+}
+
+static inline uint32_t prevPowerOfTwo(uint32_t x)
+{
+	x |= x >> 1; x |= x >> 2; x |= x >> 4;
+	x |= x >> 8; x |= x >> 16;
+	return x - (x >> 1);
+}
+
+static inline int largestPowerOfTwoLessThan(int n)
+{
+	int k = 1;
+	while (k < n) k = k << 1;
+	return k >> 1;
+}
 
 #endif // SORTALGO_H

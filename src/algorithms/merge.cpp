@@ -558,7 +558,7 @@ void CataMergeSortStable(SortArray& A)
 
 void SplayMergeSort(SortArray& A)
 {
-	std::vector<size_t> runs = Splay::runs(A);
+	std::vector<size_t> runs = SplayCollectRuns(A);
 
 	while(runs.size() > 2)
 		CataMergeRuns(A, runs, SMALL_MERGE);

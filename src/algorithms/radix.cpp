@@ -28,6 +28,11 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  *****************************************************************************/
 
+#include "SortAlgo.h"
+#include "algorithms/radix.h"
+
+#include <numeric>
+
 // ****************************************************************************
 // *** Radix Sort (counting sort, most significant digit (MSD) first, in-place redistribute)
 

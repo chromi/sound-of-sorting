@@ -31,6 +31,8 @@
 #include "SortAlgo.h"
 #include "algorithms/quicksort.h"
 
+#include <random>
+
 // ****************************************************************************
 // *** Quick Sort Pivot Selection
 
