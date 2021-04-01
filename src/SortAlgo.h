@@ -52,10 +52,6 @@ extern const struct AlgoEntry* g_algolist_end;
 
 // *** Sorting Algorithms
 
-void SelectionSort(class SortArray& a);
-void DualSelectionSort(class SortArray& a);
-void CycleSort(class SortArray& a);
-
 void BogoSort(class SortArray& a);
 void BozoSort(class SortArray& a);
 void StoogeSort(class SortArray& a);
