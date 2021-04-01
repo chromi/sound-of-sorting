@@ -56,12 +56,6 @@ void SelectionSort(class SortArray& a);
 void DualSelectionSort(class SortArray& a);
 void CycleSort(class SortArray& a);
 
-void OddEvenSort(class SortArray& a);
-
-void BitonicSort(SortArray& a);
-void BitonicSortNetwork(SortArray& a);
-void BatcherSortNetwork(SortArray& a);
-
 void RadixSortLSD(class SortArray& a);
 void RadixSortMSD(class SortArray& a);
 
