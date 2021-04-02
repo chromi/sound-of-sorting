@@ -51,7 +51,7 @@ void RadixSortMSD(SortArray& A, size_t lo, size_t hi, size_t depth)
 	size_t base = pow(RADIX, pmax - depth);
 
 	// count digits
-	std::vector<size_t> count(RADIX, 0);
+	size_t count[RADIX] = {0};
 
 	for (size_t i = lo; i < hi; ++i)
 	{
@@ -61,11 +61,12 @@ void RadixSortMSD(SortArray& A, size_t lo, size_t hi, size_t depth)
 	}
 
 	// inclusive prefix sum
-	std::vector<size_t> bkt(RADIX, 0);
-	std::partial_sum(count.begin(), count.end(), bkt.begin());
+	size_t bkt[RADIX] = {0};
+	for(size_t i=0, j=0; i < RADIX; i++)
+		bkt[i] = (j += count[i]);
 
 	// mark bucket boundaries
-	for (size_t i = 0; i < bkt.size(); ++i) {
+	for (size_t i = 0; i < RADIX; ++i) {
 		if (bkt[i] == 0) continue;
 		A.mark(lo + bkt[i]-1, 3);
 	}
@@ -148,3 +149,69 @@ void RadixSortLSD(SortArray& A)
 	}
 }
 
+// ****************************************************************************
+// *** Binary Radix Sort (quicksort style, most significant bit (MSB) first)
+
+// by Jonathan Morton
+
+void BinaryRadixSort(SortArray& A, size_t lo, size_t hi, size_t mask)
+{
+	// obtain highest significant bit of difference
+	size_t bit = (((~((size_t) 0))) >> 1) + 1;
+
+	while(bit > mask)
+		bit >>= 1;
+	if(!bit) return;
+
+	size_t i=lo, j=hi-1;
+	size_t lMin=0, lMax=0, rMin=0, rMax=0;
+	bool lSet=false, rSet=false;
+
+	while(i < j) {
+		size_t v;
+
+		while(!((v = A[i].get()) & bit)) {
+			if(!lSet) {
+				lMin = lMax = v;
+				lSet = true;
+			} else {
+				if(v > lMax) lMax = v;
+				if(v < lMin) lMin = v;
+			}
+
+			i++;
+		}
+		while( ((v = A[j].get()) & bit)) {
+			if(!rSet) {
+				rMin = rMax = v;
+				rSet = true;
+			} else {
+				if(v > rMax) rMax = v;
+				if(v < rMin) rMin = v;
+			}
+
+			j--;
+		}
+
+		if(i < j)
+			A.swap(i,j);
+	}
+
+	// i is now on the first high value, j on the last low value
+	BinaryRadixSort(A, lo, i, lMin ^ lMax);
+	BinaryRadixSort(A, i, hi, rMin ^ rMax);
+}
+
+void BinaryRadixSort(SortArray& A)
+{
+	// establish max and min values in array
+	size_t vMax = A[0].get(), vMin = vMax;
+
+	for(size_t i=1; i < A.size(); i++) {
+		size_t v = A[i].get();
+		if(v > vMax) vMax = v;
+		if(v < vMin) vMin = v;
+	}
+
+	BinaryRadixSort(A, 0, A.size(), vMax ^ vMin);
+}

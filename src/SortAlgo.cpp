@@ -196,11 +196,15 @@ const struct AlgoEntry g_algolist[] =
 	wxEmptyString },
 	{ _("Cycle Sort"), &CycleSort, 10240, UINT_MAX,
 	wxEmptyString },
+
 	{ _("Radix Sort (LSD)"), &RadixSortLSD, UINT_MAX, UINT_MAX,
 	_("Least significant digit radix sort, which copies item into a shadow "
 		"array during counting.") },
 	{ _("Radix Sort (MSD)"), &RadixSortMSD, UINT_MAX, UINT_MAX,
 	_("Most significant digit radix sort, which permutes items in-place by walking cycles.") },
+	{ _("Binary Radix Sort"), &BinaryRadixSort, UINT_MAX, UINT_MAX,
+	_("Most significant bit radix sort, using quicksort-style partitioning.") },
+
 	{ _("std::sort (gcc)"), &StlSort, UINT_MAX, inversion_count_instrumented,
 	wxEmptyString },
 	{ _("std::stable_sort (gcc)"), &StlStableSort, UINT_MAX, inversion_count_instrumented,

@@ -31,3 +31,4 @@
 void RadixSortLSD(class SortArray& a);
 void RadixSortMSD(class SortArray& a);
 
+void BinaryRadixSort(SortArray& A);
