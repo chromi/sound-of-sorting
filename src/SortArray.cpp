@@ -225,48 +225,80 @@ void SortArray::FillData(unsigned int schema, size_t arraysize)
 	{
 		std::random_device r;
 		std::default_random_engine e(r());
-		std::vector<ArrayItem> tmp;
+		std::uniform_int_distribution<size_t> uid(0, arraysize-1);
+		std::vector<ArrayItem> values, input;
+		std::vector<bool> taken(arraysize), given(arraysize);
+		size_t displaced = sqrt(arraysize);
+
+		values.reserve(displaced);
+		input.reserve(arraysize);
 
 		for (size_t i = 0; i < arraysize; ++i)
-			m_array[i] = ArrayItem(i+1);
-		for (size_t i = 0; i*i < arraysize; i++) {
-			std::uniform_int_distribution<size_t> uid(0, m_array.size()-i-1);
-			size_t x = uid(e);
-			tmp.push_back(m_array[x]);
-			while(++x < m_array.size())
-				m_array[x-1] = m_array[x];
+			input.push_back(ArrayItem(i+1));
+
+		for (size_t i = 0; i < displaced; i++) {
+			size_t x = uid(e), y = uid(e);
+
+			while(taken[x])
+				x = uid(e);
+			taken[x] = true;
+
+			while(given[y])
+				y = uid(e);
+			given[y] = true;
+
+			values.push_back(input[x]);
 		}
-		while(!tmp.empty()) {
-			std::uniform_int_distribution<size_t> uid(0, m_array.size() - tmp.size());
-			size_t x = uid(e), y = m_array.size()-1;
-			while(y-- > x)
-				m_array[y+1] = m_array[y];
-			m_array[x] = tmp.back();
-			tmp.pop_back();
+
+		for(size_t i=0, j=0; i < arraysize; i++) {
+			if(given[i]) {
+				m_array[i] = values.back();
+				values.pop_back();
+			} else {
+				while(taken[j])
+					j++;
+				m_array[i] = input[j++];
+			}
 		}
 	}
 	else if (schema == 10) // Ascending [1,n], of which 10% shuffled
 	{
 		std::random_device r;
 		std::default_random_engine e(r());
-		std::vector<ArrayItem> tmp;
+		std::uniform_int_distribution<size_t> uid(0, arraysize-1);
+		std::vector<ArrayItem> values, input;
+		std::vector<bool> taken(arraysize), given(arraysize);
+		size_t displaced = arraysize / 10;
 
-		for (size_t i = 0; i < m_array.size(); ++i)
-			m_array[i] = ArrayItem(i+1);
-		for (size_t i = 0; i*10 < arraysize; i++) {
-			std::uniform_int_distribution<size_t> uid(0, m_array.size()-i-1);
-			size_t x = uid(e);
-			tmp.push_back(m_array[x]);
-			while(++x < m_array.size())
-				m_array[x-1] = m_array[x];
+		values.reserve(displaced);
+		input.reserve(arraysize);
+
+		for (size_t i = 0; i < arraysize; ++i)
+			input.push_back(ArrayItem(i+1));
+
+		for (size_t i = 0; i < displaced; i++) {
+			size_t x = uid(e), y = uid(e);
+
+			while(taken[x])
+				x = uid(e);
+			taken[x] = true;
+
+			while(given[y])
+				y = uid(e);
+			given[y] = true;
+
+			values.push_back(input[x]);
 		}
-		while(!tmp.empty()) {
-			std::uniform_int_distribution<size_t> uid(0, m_array.size() - tmp.size());
-			size_t x = uid(e), y = m_array.size()-1;
-			while(y-- > x)
-				m_array[y+1] = m_array[y];
-			m_array[x] = tmp.back();
-			tmp.pop_back();
+
+		for(size_t i=0, j=0; i < arraysize; i++) {
+			if(given[i]) {
+				m_array[i] = values.back();
+				values.pop_back();
+			} else {
+				while(taken[j])
+					j++;
+				m_array[i] = input[j++];
+			}
 		}
 	}
 	else if (schema == 11) // Organ Pipes
