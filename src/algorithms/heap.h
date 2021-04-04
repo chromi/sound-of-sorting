@@ -36,6 +36,6 @@ void SplaySort(class SortArray& A, size_t l, size_t r);
 void SplayShakeSort(class SortArray& a);
 void SplayShakeSort(class SortArray& a, size_t m);
 
-std::vector<size_t> SplayCollectRuns(SortArray& A, size_t m = 32);
+std::vector<size_t> SplayCollectRuns(SortArray& A, size_t m = 256);
 
 void StlHeapSort(class SortArray& a);

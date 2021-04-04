@@ -589,7 +589,7 @@ namespace Splay {
 	// so up to m items can be carried along in a single pass, instad of just one
 	// with m == r-l, this reduces to a plain splaysort
 	// with m == 1, this reduces to a plain cocktail shaker sort
-	void shake(SortArray& A, size_t l, size_t r, size_t m = 32) {
+	void shake(SortArray& A, size_t l, size_t r, size_t m = 256) {
 		if(!m) {
 			while(m*m <= r-l)
 				m++;
@@ -692,7 +692,7 @@ namespace Splay {
 	}
 
 	// Collect a series of runs, as long as possible within the window size given.
-	std::vector<size_t> runs(SortArray& A, size_t m = 32) {
+	std::vector<size_t> runs(SortArray& A, size_t m = 256) {
 		std::vector<size_t> out;
 		SplayTree tree(A, m+1);
 		size_t i,j,k;

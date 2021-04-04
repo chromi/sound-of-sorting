@@ -739,7 +739,7 @@ void IntroSortDual(class SortArray& A, bool stable)
 		const SortRange p = q.back();
 		q.pop_back();
 
-		if(p.r - p.l < 32) {
+		if(p.r - p.l < 256) {
 			// small partition
 			SplaySort(A, p.l, p.r);
 
@@ -1250,7 +1250,7 @@ void SeptenaryQuickSort(class SortArray& A, bool stable)
 		const SortRange p = q.back();
 		q.pop_back();
 
-		if(p.r - p.l < 32) {
+		if(p.r - p.l < 256) {
 			// small partition
 			SplaySort(A, p.l, p.r);
 
