@@ -30,6 +30,7 @@
 
 void InsertionSort(class SortArray& a);
 void BinaryInsertionSort(class SortArray& a);
+void BlockInsertionSort(class SortArray& a);
 
 void BubbleSort(class SortArray& a);
 void CocktailShakerSort(class SortArray& a);

@@ -98,6 +98,65 @@ void BinaryInsertionSort(SortArray& A)
 	}
 }
 
+size_t BlockInsertionSort(SortArray& A, size_t l, size_t n)
+{
+	if(!n || l >= A.size())
+		return l;
+
+	const size_t Rn = floor(sqrt(n));
+	size_t i = Rn > 1 ? BlockInsertionSort(A, l, Rn) : l+1;
+
+	do {
+		// Include existing ascending sequences
+		while(i < A.size() && A[i] >= A[i-1])
+			i++;
+
+		// If that isn't enough, gather some more recursively and merge it in
+		if(i < A.size() && i-l < n) {
+			size_t j = i, m = BlockInsertionSort(A, i, Rn);
+
+			while(j < m) {
+				// Trying to insert blocks much bigger than sqrt(n) is a bad idea
+				size_t k = i = (m-j) < Rn*2 ? m : j + (m-j)/((m-j)/Rn);
+
+				while(j < k) {
+					// Find where to insert the highest element of the new block
+					size_t lo = l, hi = j;
+					value_type key = A[k-1];
+
+					while (lo < hi) {
+						size_t mid = (lo + hi) / 2;
+						if (key < A[mid])
+							hi = mid;
+						else
+							lo = mid + 1;
+					}
+
+					// Move the data
+					A.rotate(lo, j, k);
+					k -= (j - lo) + 1;
+					j = lo;
+
+					// Find how many new elements are now correctly placed
+					if(j == l)
+						break;
+					while(j < k && A[j-1] <= A[k-1])
+						k--;
+				}
+
+				j = i;
+			}
+		}
+	} while(i < A.size() && i-l < n);
+
+	return i;
+}
+
+void BlockInsertionSort(SortArray& A)
+{
+	BlockInsertionSort(A, 0, A.size());
+}
+
 // ****************************************************************************
 // *** Bubble Sort
 

@@ -61,6 +61,8 @@ const struct AlgoEntry g_algolist[] =
 	wxEmptyString },
 	{ _("Binary Insertion Sort"), &BinaryInsertionSort, 10240, UINT_MAX,
 	wxEmptyString },
+	{ _("Block Insertion Sort"), &BlockInsertionSort, UINT_MAX, UINT_MAX,
+	wxEmptyString },
 
 	{ _("Shell Sort (Shell 1959)"), &ShellSort_Shell59,
 	UINT_MAX, UINT_MAX, _("Gap sequence: N/2, N/4, ...") },
