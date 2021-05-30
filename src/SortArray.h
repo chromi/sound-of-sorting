@@ -412,13 +412,13 @@ public:
 		const ArrayItem t = m_array[i];
 		const unsigned char m = m_mark[i];
 
-		m_mark[i] = m_mark[j];
+		if(withMarks) m_mark[i] = m_mark[j];
 		set(i, m_array[j]);
 
-		m_mark[j] = m_mark[k];
+		if(withMarks) m_mark[j] = m_mark[k];
 		set(j, m_array[k]);
 
-		m_mark[k] = m;
+		if(withMarks) m_mark[k] = m;
 		set(k, t);
 	}
 
@@ -441,16 +441,16 @@ public:
 		const ArrayItem t = m_array[i];
 		const unsigned char m = m_mark[i];
 
-		m_mark[i] = m_mark[j];
+		if(withMarks) m_mark[i] = m_mark[j];
 		set(i, m_array[j]);
 
-		m_mark[j] = m_mark[k];
+		if(withMarks) m_mark[j] = m_mark[k];
 		set(j, m_array[k]);
 
-		m_mark[k] = m_mark[p];
+		if(withMarks) m_mark[k] = m_mark[p];
 		set(k, m_array[p]);
 
-		m_mark[p] = m;
+		if(withMarks) m_mark[p] = m;
 		set(p, t);
 	}
 
@@ -476,19 +476,19 @@ public:
 		const ArrayItem t = m_array[i];
 		const unsigned char m = m_mark[i];
 
-		m_mark[i] = m_mark[j];
+		if(withMarks) m_mark[i] = m_mark[j];
 		set(i, m_array[j]);
 
-		m_mark[j] = m_mark[k];
+		if(withMarks) m_mark[j] = m_mark[k];
 		set(j, m_array[k]);
 
-		m_mark[k] = m_mark[p];
+		if(withMarks) m_mark[k] = m_mark[p];
 		set(k, m_array[p]);
 
-		m_mark[p] = m_mark[q];
+		if(withMarks) m_mark[p] = m_mark[q];
 		set(p, m_array[q]);
 
-		m_mark[q] = m;
+		if(withMarks) m_mark[q] = m;
 		set(q, t);
 	}
 
@@ -497,7 +497,8 @@ public:
 	/// This requires N array writes, half as many as using swaps.
 	void rotate(size_t l, size_t m, size_t r)
 	{
-		const size_t b = m-l, a = r-m;
+		/*
+		const size_t a = m-l, b = r-m;
 		if(!a || !b) return;
 
 		RotateInversions(l,m,r);	// update inversion count
@@ -516,7 +517,7 @@ public:
 			}
 		} else {
 			// blocks of unequal size need to be "rotated"
-			// compute GCD and LCM of block sizes
+			// compute GCD and complement factor of block sizes
 			size_t c=a, d=b;
 			while(d) {
 				size_t e = c % d;
@@ -526,7 +527,7 @@ public:
 			d = (a+b)/c;
 
 			for(size_t i=0; i < c; i++) {
-				size_t x = (a+i)%(a+b);
+				size_t x = (b+i)%(a+b);
 				const ArrayItem t = m_array[x+l];
 
 				m_access_list.push_back(x+l);
@@ -534,7 +535,7 @@ public:
 				OnAccess();
 
 				for(size_t j=1; j < d; j++) {
-					size_t y = (x+b)%(a+b);
+					size_t y = (x+a)%(a+b);
 
 					m_array[x+l] = m_array[y+l];
 					std::swap(m_mark[x+l], m_mark[y+l]);
@@ -554,6 +555,89 @@ public:
 		}
 
 		m_access1 = m_access2 = -1;
+		 */
+
+		rotate_Dolphin(l,m,r);
+	//	rotate_GM(l,m,r);
+	//	rotate_Trinity(l,m,r);
+	}
+
+	// Alternative block-rotation algorithm: Dolphin
+	void rotate_Dolphin(size_t l, size_t m, size_t r)
+	{
+		const size_t a = m-l, b = r-m;
+		if(!a || !b) return;
+
+		if(a == b) {
+			// blocks of equal size can simply be swapped
+			for(size_t i=l, j=m; j < r; i++, j++)
+				swap(i, j, true);
+			return;
+		}
+
+		// blocks of unequal size need to be "rotated"
+		// compute GCD and complement factor of block sizes
+		size_t c=a, d=b;
+		while(d) {
+			size_t e = c % d;
+			c = d;
+			d = e;
+		}
+		d = (a+b)/c;
+
+		for(size_t i=0; i < c; i++) {
+			size_t x = (b+i)%(a+b);
+			const ArrayItem t = this[x+l];
+			const unsigned char m = m_mark[x+l];
+
+			for(size_t j=1; j < d; j++) {
+				size_t y = (x+a)%(a+b);
+
+				m_mark[x+l] = m_mark[y+l];
+				set(x+l, m_array[y+l]);
+
+				x = y;
+			}
+
+			m_mark[x+l] = m;
+			set(x+l, t);
+		}
+	}
+
+	// Alternative block-rotation algorithm: Gries-Mills
+	void rotate_GM(size_t l, size_t m, size_t r)
+	{
+		const size_t a = m-l, b = r-m, m2 = r-a;
+		if(!a || !b) return;
+
+		if(a > b) {
+			size_t i=l, j=m;
+			while(j < r)
+				swap(i++, j++, true);
+			rotate_GM(m2, m, r);
+		} else {
+			size_t i=m, j=r;
+			while(i > l)
+				swap(--i, --j, true);
+			rotate_GM(l, m, m2);
+		}
+	}
+
+	// Alternative block-rotation algorithm: Trinity
+	void rotate_Trinity(size_t l, size_t m, size_t r)
+	{
+		if(m <= l || r <= m) return;
+
+		size_t a=l, b=m-1, c=m, d=r-1;
+
+		while(b > a && d > c)
+			swap4(a++, b--, d--, c++, true);
+		while(b > a)
+			swap3(a++, b--, d--, true);
+		while(d > c)
+			swap3(a++, d--, c++, true);
+		while(d > a)
+			swap(a++, d--, true);
 	}
 
 	/// Special function to efficiently reverse a section of the array.
