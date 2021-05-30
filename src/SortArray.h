@@ -557,9 +557,23 @@ public:
 		m_access1 = m_access2 = -1;
 		 */
 
-		rotate_Dolphin(l,m,r);
-	//	rotate_GM(l,m,r);
-	//	rotate_Trinity(l,m,r);
+		if(l >= m || m >= r) return;
+
+		if(r-l <= 256) {
+			rotate_Dolphin(l,m,r);
+		} else {
+			size_t c = m-l, d = r-m;
+			while(d) {
+				size_t e = c % d;
+				c = d;
+				d = e;
+			}
+
+			if(c >= (r-l)/4)
+				rotate_GM(l,m,r);
+			else
+				rotate_Trinity(l,m,r);
+		}
 	}
 
 	// Alternative block-rotation algorithm: Dolphin
@@ -587,7 +601,7 @@ public:
 
 		for(size_t i=0; i < c; i++) {
 			size_t x = (b+i)%(a+b);
-			const ArrayItem t = this[x+l];
+			const ArrayItem t = (*this)[x+l];
 			const unsigned char m = m_mark[x+l];
 
 			for(size_t j=1; j < d; j++) {
@@ -610,7 +624,7 @@ public:
 		const size_t a = m-l, b = r-m, m2 = r-a;
 		if(!a || !b) return;
 
-		if(a > b) {
+		if(a >= b) {
 			size_t i=l, j=m;
 			while(j < r)
 				swap(i++, j++, true);
@@ -631,11 +645,11 @@ public:
 		size_t a=l, b=m-1, c=m, d=r-1;
 
 		while(b > a && d > c)
-			swap4(a++, b--, d--, c++, true);
+			swap4(c++, d--, b--, a++, true);
 		while(b > a)
-			swap3(a++, b--, d--, true);
+			swap3(a++, d--, b--, true);
 		while(d > c)
-			swap3(a++, d--, c++, true);
+			swap3(c++, d--, a++, true);
 		while(d > a)
 			swap(a++, d--, true);
 	}
