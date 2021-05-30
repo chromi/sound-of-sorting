@@ -28,15 +28,22 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  *****************************************************************************/
 
+// conventional out-of-place mergesorts
 void MergeSort(class SortArray& a);
 void MergeSortIterative(class SortArray& a);
+
+// in-place "rotation" mergesorts
 void MergeSortInPlace(class SortArray& a);
 void MergeSortSemiInPlace(class SortArray& a);
-
 void CataMergeSort(class SortArray& a);
 void CataMergeSortStable(class SortArray& a);
-
 void SplayMergeSort(class SortArray& a);
+
+// in-place "bitonic" mergesorts
+void BitonicMergeRecursive(SortArray& a);
+void BitonicMergeIterative(SortArray& a);
+void BitonicCataMerge(SortArray& a);
+void BitonicSplayMerge(SortArray& a);
 
 // the following are not in merge.cpp but have their own implementation files
 void TimSort(class SortArray& a);

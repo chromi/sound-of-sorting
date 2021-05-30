@@ -111,12 +111,13 @@ const struct AlgoEntry g_algolist[] =
 	{ _("Shell Sort (Fibonacci cubed)"), &ShellSort_FibonacciCubed,
 	UINT_MAX, UINT_MAX, _("Gap sequence: 1, 8, 27, 125, 512, 2197, ...") },
 
-	{ _("Merge Sort"), &MergeSort, UINT_MAX, UINT_MAX,
+	{ _("Merge Sort (recursive)"), &MergeSort, UINT_MAX, UINT_MAX,
 	_("Merge sort which merges two sorted sequences into a shadow array,"
 		"and then copies it back to the shown array.") },
 	{ _("Merge Sort (iterative)"), &MergeSortIterative, UINT_MAX, UINT_MAX,
 	_("Merge sort variant which iteratively merges "
 		"subarrays of sizes of powers of two.") },
+
 	{ _("Merge Sort (in-place)"), &MergeSortInPlace, UINT_MAX, UINT_MAX,
 	_("Merge sort variant which iteratively merges "
 		"subarrays of sizes of powers of two, using an in-place merging algorithm.") },
@@ -129,6 +130,15 @@ const struct AlgoEntry g_algolist[] =
 	_("Merge sort variant which searches for runs in either direction, reverses descending runs, then merges them.  Runs of equal values are treated as part of a run in either direction.") },
 	{ _("Splay Merge Sort"), &SplayMergeSort, UINT_MAX, UINT_MAX,
 	_("Merge sort variant which uses splaysort to collect ascending runs, then merges adjacent pairs of runs in-place.") },
+
+//	{ _("Adaptive Bitonic Merge Sort (recursive)"), &BitonicMergeRecursive, UINT_MAX, UINT_MAX,
+//	_("In-place top-down mergesort using the bitonic principle.") },
+//	{ _("Adaptive Bitonic Merge Sort (iterative)"), &BitonicMergeIterative, UINT_MAX, UINT_MAX,
+//	_("In-place bottom-up mergesort using the bitonic principle.") },
+//	{ _("Adaptive Bitonic CataMerge Sort"), &BitonicCataMerge, UINT_MAX, UINT_MAX,
+//	_("In-place merge sort variant which finds bitonic sequences in the input, then merges adjacent pairs of runs using the bitonic principle.") },
+//	{ _("Adaptive Bitonic Splay Merge Sort"), &BitonicSplayMerge, UINT_MAX, UINT_MAX,
+//	_("In-place merge sort variant which uses splaysort to collect ascending runs, then merges adjacent pairs of runs using the bitonic principle.") },
 
 	{ _("Quick Sort (LR ptrs)"), &QuickSortLR, 16384, UINT_MAX,
 	_("Quick sort variant with left and right pointers.") },

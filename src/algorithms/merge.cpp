@@ -303,8 +303,7 @@ void MergeSortMergeInPlace(SortArray& A, const size_t l, const size_t m, const s
 
 	// Single-element blocks in wrong order?
 	if(r-l == 2) {
-		A.swap(l,m);
-		A.mark_swap(l,m);
+		A.swap(l, m, true);
 		return;
 	}
 
@@ -564,3 +563,526 @@ void SplayMergeSort(SortArray& A)
 		CataMergeRuns(A, runs, SMALL_MERGE);
 }
 
+
+
+// ****************************************************************************
+// *** Adaptive Bitonic Merge Sort
+// *** by Jonathan Morton
+//
+// An adaptive, stable, in-place mergesort variant based on the bitonic principle.
+//
+// A bitonic sequence is one that can be cylindrically rotated to consist of a
+// monotonically increasing sequence followed by a monotonically decreasing sequence.
+// A monotonic sequence, either ascending or descending, is a degenerate case of a
+// bitonic sequence.  Any arbitrary sequence of up to three values is also a bitonic
+// sequence.
+//
+// A bitonic sequence can be sorted into a monotonically ascending sequence using a
+// recursive "bitonic rectify" algorithm.  Two adjacent monotonically ascending
+// sequences can be converted into a pair of bitonic sequences by a "bitonic
+// partition" algorithm which ensures that all elements in the right sequence are
+// greater than or equal to all elements in the left sequence.
+//
+// Combining these "bitonic partition" and "bitonic rectify" procedures merges the
+// two original sequences into a single monotonically increasing sequence.  The
+// combination can thus be used as a standard in-place merge step in a variety of
+// mergesort algorithms.
+//
+// These are the essential principles behind the well-known Bitonic Sorting Network
+// published long ago by Batcher.  The Adaptive Bitonic Merge Sort optimises this
+// procedure by exploiting certain regular features of the bitonic partition and rectify
+// steps, which reduce the number of comparisons that need to be made (by conducting
+// binary rather than linear searches) and also enable stable sorting.  To facilitate
+// this, information about the locations of the ascending and descending sequences is
+// passed through the recursion.
+//
+// Additionally, an unsorted array can be searched for already existing bitonic
+// sequences, which can then be rectified and used as seed runs for a merge tree.
+// This requires treating runs of equal values as forming a monotonically ascending
+// sequence.
+
+// Convert a bitonic sequence into an ascending sequence.
+// This is done by recursively partitioning the bitonic sequence by its median.
+// This "dumb" version does a full-width binary search without tracking ascending/descending subsequences.
+void BitonicDumbRectify(SortArray& A, const size_t l, const size_t r)
+{
+	const size_t len = r - l;
+
+	if(r <= l)
+		return;
+
+	if(len < 2)
+		return;
+	if(len == 2) {
+		if(A[l] > A[l+1])
+			A.swap(l, l+1, true);
+		return;
+	}
+
+	const size_t half = len / 2, mirror = len - half;
+	const bool rectLeft  = (A[l] > A[l + mirror]);
+	const bool rectRight = (A[(r-1) - mirror] > A[r-1]);
+
+	if(!rectLeft && !rectRight) {
+		// no swaps here, just recurse
+		BitonicDumbRectify(A, l, l + mirror);
+		BitonicDumbRectify(A, l + half, r);
+	} else if(rectLeft && rectRight) {
+		// swap them all, then recurse
+		for(size_t i = l, j = l + mirror; j < r; i++, j++)
+			A.swap(i, j, true);
+		BitonicDumbRectify(A, l, l + mirror);
+		BitonicDumbRectify(A, l + half, r);
+	} else if(rectLeft && !rectRight) {
+		// find split point so we can swap A-B-C-D to C-B-A-D, keeping middle element with left
+		size_t leftEdge = l + 1;			// just after last element known in wrong order
+		size_t rightEdge = l + half - 1;	// first element known in right order
+
+		while(leftEdge < rightEdge) {
+			size_t mid = leftEdge + (rightEdge - leftEdge) / 2;
+			if(A[mid] > A[mid + mirror])
+				leftEdge = mid+1;
+			else
+				rightEdge = mid;
+		}
+
+		// swap A elements with their C mirrors, left of leftEdge
+		for(size_t i = l; i < leftEdge; i++)
+			A.swap(i, i + mirror, true);
+
+		BitonicDumbRectify(A, l, l + mirror);
+		BitonicDumbRectify(A, l + mirror, r);
+	} else if(!rectLeft && rectRight) {
+		// find split point so we can swap A-B-C-D to A-D-C-B, keeping middle element with right
+		size_t leftEdge = l + 1;			// just after last element known in right order
+		size_t rightEdge = l + half - 1;	// first element known in wrong order
+
+		while(leftEdge < rightEdge) {
+			size_t mid = leftEdge + (rightEdge - leftEdge) / 2;
+			if(A[mid] > A[mid + mirror])
+				rightEdge = mid;
+			else
+				leftEdge = mid+1;
+		}
+
+		// swap B elements with their D mirrors, from rightEdge rightwards
+		for(size_t i = rightEdge; i < l + half; i++)
+			A.swap(i, i + mirror, true);
+
+		BitonicDumbRectify(A, l, l + half);
+		BitonicDumbRectify(A, l + half, r);
+	}
+
+	// DEBUG
+	// check whether the block was properly rectified
+	for(size_t i=l+1; i < r; i++) {
+		if(A[i] < A[i-1]) {
+			fprintf(stderr, "bad output from BitonicDumbRectify(%lu,%lu): %s %s\n", l, r, rectLeft ? "rectLeft" : "!rectLeft", rectRight ? "rectRight" : "!rectRight");
+			SplaySort(A, l, r);
+			break;
+		}
+	}
+}
+
+// Merge two adjacent ascending sequences by bitonic partition and rectify.
+// This version calls the "dumb" rectify and does not result in a stable sort.
+void BitonicDumbPartition(SortArray& A, const size_t l, const size_t m, const size_t r)
+{
+	const size_t lenL = m - l, lenR = r - m;
+
+	if(l >= m || m >= r)
+		return;
+
+	// mark left and right sequences visually
+	for(size_t i=l; i < m; i++)
+		A.mark(i, 4);
+	for(size_t i=m; i < r; i++)
+		A.mark(i, 11);
+
+	// deal with the easy cases
+	if(lenL == 1 && lenR == 1) {
+		// simple compare and swap
+		if(A[l] > A[m])
+			A.swap(l, m, true);
+		return;
+	}
+	if(A[m] >= A[m-1])
+		return;		// already in correct order
+	if(A[l] > A[r-1]) {
+		// swap entire blocks
+		A.rotate(l,m,r);
+		return;
+	}
+
+	// insert single-element blocks directly
+	// compares have already occurred with first and last elements in longer run
+	if(lenL == 1) {
+		size_t leftEdge = m+1;
+		size_t rightEdge = r-1;
+		const value_type v = A[l];
+
+		while(leftEdge < rightEdge) {
+			size_t mid = leftEdge + (rightEdge - leftEdge) / 2;
+			if(v > A[mid])
+				leftEdge = mid+1;
+			else
+				rightEdge = mid;
+		}
+
+		A.rotate(l, m, leftEdge);
+		return;
+	} else if(lenR == 1) {
+		size_t leftEdge = l+1;
+		size_t rightEdge = m-1;
+		const value_type v = A[m];
+
+		while(leftEdge < rightEdge) {
+			size_t mid = leftEdge + (rightEdge - leftEdge) / 2;
+			if(v < A[mid])
+				rightEdge = mid;
+			else
+				leftEdge = mid+1;
+		}
+
+		A.rotate(rightEdge, m, r);
+		return;
+	}
+
+	// convert two ascending runs into two bitonic runs, partitioned by a median pivot
+	// we search for a median position in each run in turn, then reverse the block between them
+	// first search the right partition for a split point based on the left median
+	// then search the left partition for a split point based on the right split point
+	size_t leftEdge = m, rightEdge = r;
+
+	const size_t midL = l + lenL / 2;
+	const value_type vL = A[midL];
+
+	while(leftEdge < rightEdge) {
+		size_t mid = leftEdge + (rightEdge - leftEdge) / 2;
+		if(vL > A[mid])
+			leftEdge = mid+1;
+		else
+			rightEdge = mid;
+	}
+
+	const size_t midR = rightEdge == r ? r-1 : rightEdge;	// first element in right block that's >= left median element
+	const value_type vR = A[midR];
+
+	leftEdge = midL + 1;
+	rightEdge = m;
+
+	while(leftEdge < rightEdge) {
+		size_t mid = leftEdge + (rightEdge - leftEdge) / 2;
+		if(A[mid] > vR)
+			rightEdge = mid;
+		else
+			leftEdge = mid+1;
+	}
+
+	// perform the reversal, and calculate the new division between the two sequences
+	const size_t revL = leftEdge, revR = midR;
+	const size_t newMid = revL + (revR - m);
+
+	A.reverse(revL, revR);
+
+	// rectify both bitonic sequences
+	BitonicDumbRectify(A, l, newMid);
+	BitonicDumbRectify(A, newMid, r);
+}
+
+
+// Driver routines for bitonic merging
+void BitonicMergeRecursive(SortArray& A, const size_t l, const size_t r)
+{
+	if(r-l < 2)
+		return;
+
+	const size_t m = (l+r)/2;
+
+	BitonicMergeRecursive(A, l, m);
+	BitonicMergeRecursive(A, m, r);
+
+	BitonicDumbPartition(A, l, m, r);
+}
+
+void BitonicMergeRecursive(SortArray& A)
+{
+	BitonicMergeRecursive(A, 0, A.size());
+}
+
+void BitonicMergeIterative(SortArray& A)
+{
+	for(size_t p=1; p < A.size(); p *= 2)
+		for(size_t i=0; i+p < A.size(); i += p*2)
+			BitonicDumbPartition(A, i, i+p, std::min(i+p+p, A.size()));
+}
+
+void BitonicCataMergeRuns(SortArray& A, std::vector<size_t>& runs)
+{
+	// find the adjacent pair of runs with the smallest total length, and merge them.
+	size_t minlen=A.size(), mini=0;
+
+	for(size_t i=0; i < runs.size()-2; i++) {
+		size_t len = runs[i+2] - runs[i];
+		if(len < minlen) {
+			minlen = len;
+			mini = i;
+		}
+	}
+
+	size_t l = runs[mini], k = runs[mini+1], j = runs[mini+2];
+
+	// use the in-place bitonic merge step
+	BitonicDumbPartition(A, l, k, j);
+
+	runs.erase(runs.begin() + mini+1);
+}
+
+void BitonicCataMerge(SortArray& A)
+{
+	std::vector<size_t> runs;
+	size_t i=0, j=0;
+
+	runs.push_back(0);
+
+	while(++j < A.size()) {
+		const value_type iv = A[i];
+
+		if(A[j] >= iv) {
+			// gather bitonic sequence starting with ascending subsequence
+			do {
+				j++;	// find extent of ascending run
+			} while(j < A.size() && A[j] >= A[j-1]);
+
+			const size_t k = j;		// start of descending run
+
+			while(j < A.size() && A[j] < A[j-1])
+				j++;	// find extent of descending run
+
+			const size_t l = j;		// end of descending run
+
+			while(j < A.size() && A[j] <= iv && A[j] >= A[j-1])
+				j++;	// an ascending run leading to at most the initial value
+
+			if(j > k) {
+				// rectify the bitonic sequence into an ascending one
+				BitonicDumbRectify(A, i, j);
+			}
+		} else {
+			// gather bitonic sequence starting with descending subsequence
+			do {
+				j++;	// find extent of descending run
+			} while(j < A.size() && A[j] < A[j-1]);
+
+			const size_t k = j;		// start of ascending run
+
+			while(j < A.size() && A[j] >= A[j-1])
+				j++;	// find extent of ascending run
+
+			const size_t l = j;		// end of ascending run
+
+			while(j < A.size() && A[j] > iv && A[j] < A[j-1])
+				j++;	// a descending run terminating before the initial value
+
+			if(j > k) {
+				// rectify the bitonic sequence into an ascending one
+				BitonicDumbRectify(A, i, j);
+			} else {
+				// it's a descending only sequence, just reverse it
+				A.reverse(i, j);
+			}
+		}
+
+		// add the run to the list
+		runs.push_back(j);
+
+		// check if we need to consolidate early
+		for(;;) {
+			// are there at least two runs?
+			if(runs.size() < 3)
+				break;
+
+			size_t k = runs[runs.size()-2], l = runs[runs.size()-3];
+			size_t kk = j-k, ll = k-l, mm = A.size()-j;
+
+			// is the last run at least as big as the previous one?
+			if(kk < ll || mm < kk)
+				break;
+
+			// both true, so merge required; repeat as necessary
+			BitonicCataMergeRuns(A, runs);
+		}
+
+		i = j;
+	}
+
+	if(runs.back() < A.size())
+		runs.push_back(A.size());
+
+	while(runs.size() > 2)
+		BitonicCataMergeRuns(A, runs);
+}
+
+void BitonicSplayMerge(SortArray& A)
+{
+	std::vector<size_t> runs = SplayCollectRuns(A);
+
+	while(runs.size() > 2)
+		BitonicCataMergeRuns(A, runs);
+}
+
+#if 0
+
+// Convert a bitonic sequence into an ascending sequence.
+// This is done by recursively partitioning the bitonic sequence by its median.
+// This "smart" version tracks ascending and descending subsequences, searches only
+// ranges that can cross, and puts equal elements in correct order.
+void BitonicRectify(SortArray& A, const size_t l, const size_t r, const size_t aOff, const size_t aLen)
+{
+	const size_t len = r - l;
+
+	ASSERT(r > l);
+	ASSERT(aLen <= len);
+	ASSERT(aOff < len);
+
+	if(aLen == len) {
+		// fully ascending sequence, just need to rotate it into position
+		if(aOff)
+			A.rotate(l, aOff, r);
+		return;
+	} else if(!aLen) {
+		// fully descending sequence, just need to reverse and rotate
+		if(aOff)
+			A.rotate(l, aOff, r);
+		A.reverse(l, r);
+		return;
+	}
+
+	// The basic bitonic rectify is floor(N/2) compare-swaps between "mirrored" items i and i+ceil(N/2).
+	// This always results in an initial A-B-C-D series of blocks being rearranged to either
+	// C-B-A-D or A-D-C-B, where the swapped pair of blocks are of equal length.  The split
+	// point between A-B and C-D is always in a range where the mirrored items are in runs of
+	// opposite direction.  Hence we only need to search the shorter run, and we can do so
+	// with a binary search.  The shorter run can never straddle *both* the end of the
+	// sequence and the halfway mark, only one or the other.
+	// Note that to handle odd-length sequences, there may be one element in the middle that
+	// is never searched, but is passed down as part of whichever adjacent block doesn't move.
+	const size_t dOff = (aOff + aLen) > len ? aOff + aLen - len : aOff + aLen;
+	const size_t dLen = len - aLen;
+	const size_t half = len / 2, mirror = len - half;
+	size_t leftEdge, rightEdge;
+	bool searchFromRight;  // distinguishes C-B-A-D from A-D-C-B.
+
+	if(aLen < mirror) {
+		// we'll search the ascending run
+		if(aOff < half && (aOff + aLen < half || A[l] <= A[l + mirror])) {
+			// relevant part of ascending run is in left half of mirror
+			leftEdge = l + aOff;
+			rightEdge = l + ((aOff + aLen < half) ? aOff + aLen : half);
+			searchFromRight = true;
+		} else if(aOff < half) {
+			// ascending run straddles halfway mark, and relevant part is in right half of mirror
+			leftEdge = l;
+			rightEdge = l + aOff + aLen - mirror;
+			searchFromRight = false;
+		} else if(aOff + aLen <= len || A[l] <= A[l + mirror]) {
+			// relevant part of ascending run is in right half of mirror
+			leftEdge = (aOff < mirror) ? l : l + aOff - mirror;
+			rightEdge = (aOff + aLen < len) ? l + aOff + aLen - mirror : half;
+			searchFromRight = false;
+		} else {
+			// ascending run straddles beginning/end, and relevant part is in left half of mirror
+			leftEdge = l;
+			rightEdge = l + aOff + aLen - len;
+			searchFromRight = true;
+		}
+	} else {
+		// we'll search the descending run
+		if(dOff < half && (dOff + dLen < half || A[l] > A[l + mirror])) {
+			// relevant part of descending run is in left half of mirror
+			leftEdge = l + dOff;
+			rightEdge = l + ((dOff + dLen < half) ? dOff + dLen : half);
+			searchFromRight = false;
+		} else if(dOff < half) {
+			// descending run straddles halfway mark, and relevant part is in right half of mirror
+			leftEdge = l;
+			rightEdge = l + dOff + dLen - mirror;
+			searchFromRight = true;
+		} else if(dOff + dLen <= len || A[l] > A[l + mirror]) {
+			// relevant part of descending run is in right half of mirror
+			leftEdge = (dOff < mirror) ? l : l + dOff - mirror;
+			rightEdge = (dOff + dLen < len) ? l + dOff + dLen - mirror : half;
+			searchFromRight = true;
+		} else {
+			// descending run straddles beginning/end, and relevant part is in left half of mirror
+			leftEdge = l;
+			rightEdge = l + dOff + dLen - len;
+			searchFromRight = false;
+		}
+	}
+
+	// Search the selected half-open interval for the A-B split point, then resolve it.
+	if(searchFromRight) {
+		// we'll swap B with D, resulting in A-D-C-B order, middle element stays with C
+		const size_t aOffLeft  = (aOff < half) ? aOff : (aOff == half) ? 0 : aOff - mirror;
+		const size_t dOffLeft  = (dOff < half) ? dOff : (dOff == half) ? 0 : dOff - mirror;
+		const size_t aOffRight = (aOff < half) ? aOff + mirror - half : aOff - half;
+		const size_t dOffRight = (dOff < half) ? dOff + mirror - half : dOff - half;
+
+		// rightEdge indicates the first element known to be in the wrong order
+		// leftEdge is just after the last element known to be in the right order
+		while(leftEdge < rightEdge) {
+			size_t mid = leftEdge + (rightEdge - leftEdge) / 2;
+			if(A[mid] > A[mid + mirror])
+				rightEdge = mid;
+			else
+				leftEdge = mid+1;
+		}
+
+		// swap B elements with their D mirrors, from rightEdge rightwards
+		for(size_t i = rightEdge; i < l + half; i++)
+			A.swap(i, i + mirror, true);
+
+		// enumerate components of A, B, C, D blocks
+		const size_t lenA = rightEdge - l;
+		const size_t lenB = half - lenA, lenD = lenB;
+		const size_t lenC = mirror - lenD;
+		const size_t aOffA = (aOff < lenA) ? aOff : 0;
+		const size_t aLenA = (aOff < lenA) ? (aOff + aLen <= lenA ? aLen : lenA - aOff) : 0;
+
+		// recurse to rectify left half
+		size_t aOffLeft = (aOff == half) ? 0 : (aOff < half) ? aOff : aOff - mirror;
+		size_t aLenLeft = (aOffLeft <= rightEdge) ? rightEdge - aOffLeft : rightEdge + half - aOffLeft;
+		if(!aLenLeft && )
+		BitonicRectify(A, l, half, aOffLeft, aLenLeft);
+
+		// recurse to rectify right half, including middle element
+
+
+	} else {
+		// rightEdge indicates the first element known to be in the right order
+		// leftEdge is just after the last element known to be in the wrong order
+		while(leftEdge < rightEdge) {
+			size_t mid = leftEdge + (rightEdge - leftEdge) / 2;
+			if(A[mid] >= A[mid + mirror])
+				leftEdge = mid+1;
+			else
+				rightEdge = mid;
+		}
+
+		// swap A elements with their C mirrors, leftwards beyond leftEdge
+		for(size_t i = l; i < leftEdge; i++)
+			A.swap(i, i + mirror, true);
+
+		// recurse to rectify left half, including middle element
+
+
+		// recurse to rectify right half
+
+		
+	}
+
+
+}
+
+#endif

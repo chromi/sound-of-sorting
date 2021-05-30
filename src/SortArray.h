@@ -556,6 +556,15 @@ public:
 		m_access1 = m_access2 = -1;
 	}
 
+	/// Special function to efficiently reverse a section of the array.
+	/// This also swaps the marks associated with these values.
+	/// This requires floor(N/2) swaps.
+	void reverse(size_t l, size_t r)
+	{
+		while(l < r)
+			swap(l++, --r, true);
+	}
+
 	/// Touch an item of the array: set color till next frame is outputted.
 	void touch(size_t i, int color = 2,
 			   unsigned short sustain = 0, unsigned short priority = 0)
