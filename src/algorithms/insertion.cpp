@@ -104,20 +104,24 @@ size_t BlockInsertionSort(SortArray& A, size_t l, size_t n)
 		return l;
 
 	const size_t Rn = floor(sqrt(n));
-	size_t i = Rn > 1 ? BlockInsertionSort(A, l, Rn) : l+1;
+	size_t i = l;
 
-	do {
+	if(n < 2) {
 		// Include existing ascending sequences
-		while(i < A.size() && A[i] >= A[i-1])
+		while(i < A.size() && (i == l || A[i] >= A[i-1]))
 			i++;
-
+	} else do {
 		// If that isn't enough, gather some more recursively and merge it in
 		if(i < A.size() && i-l < n) {
 			size_t j = i, m = BlockInsertionSort(A, i, Rn);
 
-			while(j < m) {
+			// short-circuit if a bigger block than expected was found easily
+			if((j == l || j-l > n) && m-j > n)
+				return m;
+
+			while(j < m && j > l && A[j-1] > A[j]) {
 				// Trying to insert blocks much bigger than sqrt(n) is a bad idea
-				size_t k = i = (m-j) < Rn*2 ? m : j + (m-j)/((m-j)/Rn);
+				size_t k = i = ((m-j) < Rn*2 || (j-l) < Rn*2) ? m : j + (m-j)/((m-j)/Rn);
 
 				while(j < k) {
 					// Find where to insert the highest element of the new block
@@ -143,9 +147,9 @@ size_t BlockInsertionSort(SortArray& A, size_t l, size_t n)
 					while(j < k && A[j-1] <= A[k-1])
 						k--;
 				}
-
 				j = i;
 			}
+			i = m;
 		}
 	} while(i < A.size() && i-l < n);
 
