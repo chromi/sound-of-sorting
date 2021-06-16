@@ -62,7 +62,8 @@ const struct AlgoEntry g_algolist[] =
 	{ _("Binary Insertion Sort"), &BinaryInsertionSort, 10240, UINT_MAX,
 	wxEmptyString },
 	{ _("Block Insertion Sort"), &BlockInsertionSort, UINT_MAX, UINT_MAX,
-	wxEmptyString },
+	_("Recursively assembles sorted blocks of size sqrt(N), then inserts them into the sorted list using binary searches and block rotates.  "
+	  "Each item is moved O(sqrt(N)) times; overall complexity O(N^(3/2)).") },
 
 	{ _("Shell Sort (Shell 1959)"), &ShellSort_Shell59,
 	UINT_MAX, UINT_MAX, _("Gap sequence: N/2, N/4, ...") },
@@ -141,6 +142,10 @@ const struct AlgoEntry g_algolist[] =
 //	_("In-place merge sort variant which finds bitonic sequences in the input, then merges adjacent pairs of runs using the bitonic principle.") },
 //	{ _("Adaptive Bitonic Splay Merge Sort"), &BitonicSplayMerge, UINT_MAX, UINT_MAX,
 //	_("In-place merge sort variant which uses splaysort to collect ascending runs, then merges adjacent pairs of runs using the bitonic principle.") },
+
+	{ _("Block Merge Sort (iterative)"), &BlockMergeIterative, UINT_MAX, UINT_MAX,
+	_("Merge sort variant which iteratively merges "
+		"subarrays of sizes of powers of two, using in-place block merging.") },
 
 	{ _("Quick Sort (LR ptrs)"), &QuickSortLR, 16384, UINT_MAX,
 	_("Quick sort variant with left and right pointers.") },

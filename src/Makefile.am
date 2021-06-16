@@ -10,6 +10,7 @@ COMMON = SortArray.cpp SortArray.h \
 	algorithms/insertion.cpp \
 	algorithms/quicksort.cpp \
 	algorithms/merge.cpp \
+	algorithms/blockmerge.cpp \
 	algorithms/heap.cpp \
 	algorithms/parallel.cpp \
 	algorithms/radix.cpp \

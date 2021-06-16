@@ -663,6 +663,15 @@ public:
 			swap(l++, --r, true);
 	}
 
+	/// Special function to efficiently swap two equal-sized blocks.
+	/// This optionally also swaps the marks associated with these values.
+	/// The blocks need not be adjacent but must not overlap.
+	void blockswap(size_t l, size_t r, size_t n, bool withMarks=false)
+	{
+		for(size_t i=0; i < n; i++)
+			swap(l+i, r+i, withMarks);
+	}
+
 	/// Touch an item of the array: set color till next frame is outputted.
 	void touch(size_t i, int color = 2,
 			   unsigned short sustain = 0, unsigned short priority = 0)

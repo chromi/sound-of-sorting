@@ -45,6 +45,9 @@ void BitonicMergeIterative(SortArray& a);
 void BitonicCataMerge(SortArray& a);
 void BitonicSplayMerge(SortArray& a);
 
+// in-place block merges, in blockmerge.cpp
+void BlockMergeIterative(SortArray& a);
+
 // the following are not in merge.cpp but have their own implementation files
 void TimSort(class SortArray& a);
 void WikiSort(class SortArray& a);
