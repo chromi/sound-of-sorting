@@ -104,30 +104,30 @@ void MergeInternalBackward(SortArray& A, IdxVec& idx, IdxVec& rev,
 	// Initialise internal buffer indices.
 	for(size_t i=r-1, x=0; x < b; i--, x++) {
 		idx[x] = i;
-		rev[i % a] = x;
+		rev[i % b] = x;
 	}
 
 	// Perform the merge.
 	for(size_t i=r-1, j=m-1, x=0; i > j; i--) {
 		if(j > l && A[idx[x]] < A[j]) {
 			// use left item, displacing a right item
-			const size_t y = rev[i % a];
+			const size_t y = rev[i % b];
 
 			A.swap(i, j, true);
 			A.mark(j, 12);	// left item now part of internal buffer
 
 			idx[y] = j;
-			rev[j % a] = y;
+			rev[j % b] = y;
 			j--;
 		} else {
 			// use right item
 			if(idx[x] != i) {
 				// right item is deep within internal buffer, move into place
-				const size_t y = rev[i % a];
+				const size_t y = rev[i % b];
 
 				A.swap(i, idx[x]);
 				std::swap(idx[x], idx[y]);
-				rev[idx[y] % a] = y;
+				rev[idx[y] % b] = y;
 			}
 
 			A.mark(i, 11);	// right item in place
@@ -356,8 +356,8 @@ void BlockMergeIterative(SortArray& A)
 
 			if(j >= A.size())
 				break;
-			if(k > r)
-				k = r;
+			if(k > A.size())
+				k = A.size();
 
 			MergeBlocksDriver(A, keys, idx, rev, i, j, k);
 		}
