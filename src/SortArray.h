@@ -66,7 +66,7 @@ public:
 
 	ArrayItem(const ArrayItem& v) : value(v.value) {}
 
-	constexpr ArrayItem& operator=(const ArrayItem&) = default;
+	ArrayItem& operator=(const ArrayItem&) = default;
 
 	// ArrayItem has no implicit data cast, because most sorting algorithms use
 	// comparisons. However, radix sort and similar use the following data
