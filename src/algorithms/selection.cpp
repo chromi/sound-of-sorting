@@ -168,3 +168,27 @@ void CycleSort(SortArray& A)
 	CycleSort(A, A.size());
 }
 
+// ****************************************************************************
+// *** Surprise Sort
+
+// Adapted from https://arxiv.org/abs/2110.01111
+// Stanley Fung, "Is this the simplest (and most surprising) sorting algorithm ever?", 2021
+
+// algorithm 1
+void SurpriseSort(SortArray& A)
+{
+	for(size_t i=0; i < A.size(); i++)
+		for(size_t j=0; j < A.size(); j++)
+			if(A[i] < A[j])
+				A.swap(i,j);
+}
+
+// algorithm 3
+void SurpriseInsertionSort(SortArray& A)
+{
+	for(size_t i=1; i < A.size(); i++)
+		for(size_t j=0; j < i; j++)
+			if(A[i] < A[j])
+				A.swap(i,j);
+}
+

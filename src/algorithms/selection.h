@@ -32,3 +32,5 @@ void SelectionSort(class SortArray& a);
 void DualSelectionSort(class SortArray& a);
 void CycleSort(class SortArray& a);
 
+void SurpriseSort(class SortArray& a);
+void SurpriseInsertionSort(class SortArray& a);

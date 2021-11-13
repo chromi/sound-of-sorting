@@ -178,6 +178,11 @@ const struct AlgoEntry g_algolist[] =
 	_("Septenary-split stable quicksort variant with three pivots (quartiles of random sample), "
 		"insertion-sort of small blocks, and smallest-first partitioning with a priority queue.") },
 
+	{ _("Surprise Sort"), &SurpriseSort, 10240, UINT_MAX,
+	wxEmptyString },
+	{ _("Surprise Insertion Sort"), &SurpriseInsertionSort, 10240, UINT_MAX,
+	wxEmptyString },
+
 	{ _("Bubble Sort"), &BubbleSort, 10240, UINT_MAX,
 	wxEmptyString },
 	{ _("Cocktail Shaker Sort"), &CocktailShakerSort, 10240, UINT_MAX,
