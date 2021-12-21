@@ -83,6 +83,8 @@ const struct AlgoEntry g_algolist[] =
 	UINT_MAX, UINT_MAX, _("Gap sequence: 1, 4, 13, 40, 121, 364, 1093, 3280, ...\n(3^k - 1) / 2") },
 	{ _("Shell Sort (Sedgewick 1982)"), &ShellSort_Sedgewick82,
 	UINT_MAX, UINT_MAX, _("Gap sequence: 1, 8, 23, 77, 281, 1073, 4193, ...\n4^k + 3*2^(k-1) + 1") },
+	{ _("Shell Sort (Sedgewick 1982 Modified)"), &ShellSort_Sedgewick82Mod,
+	UINT_MAX, UINT_MAX, _("Gap sequence: 1, 3, 8, 23, 77, 281, 1073, 4193, ...\n4^k + 3*2^(k-1) + 1") },
 	{ _("Shell Sort (Incerpi-Sedgewick 1985)"), &ShellSort_Incerpi85,
 	UINT_MAX, UINT_MAX, _("Gap sequence: 1, 3, 7, 21, 48, 112, 336, 861, 1968, ...") },
 	{ _("Shell Sort (Sedgewick 1986)"), &ShellSort_Sedgewick86,

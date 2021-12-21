@@ -47,6 +47,7 @@ enum ShellSortIncrementType {
 	SHELL_1971_PRATT_57,
 	SHELL_1973_KNUTH,
 	SHELL_1982_SEDGEWICK,
+	SHELL_1982_SEDGEWICK_MODIFIED,
 	SHELL_1985_INCERPI,
 	SHELL_1986_SEDGEWICK,
 	SHELL_1991_GONNET,
@@ -83,6 +84,7 @@ static inline void ShellSort_Pratt71_35(SortArray& A)		{ ShellSort(A, SHELL_1971
 static inline void ShellSort_Pratt71_57(SortArray& A)		{ ShellSort(A, SHELL_1971_PRATT_57); }
 static inline void ShellSort_Knuth73(SortArray& A)			{ ShellSort(A, SHELL_1973_KNUTH); }
 static inline void ShellSort_Sedgewick82(SortArray& A)		{ ShellSort(A, SHELL_1982_SEDGEWICK); }
+static inline void ShellSort_Sedgewick82Mod(SortArray& A)	{ ShellSort(A, SHELL_1982_SEDGEWICK_MODIFIED); }
 static inline void ShellSort_Incerpi85(SortArray& A)		{ ShellSort(A, SHELL_1985_INCERPI); }
 static inline void ShellSort_Sedgewick86(SortArray& A)		{ ShellSort(A, SHELL_1986_SEDGEWICK); }
 static inline void ShellSort_Gonnet91(SortArray& A)			{ ShellSort(A, SHELL_1991_GONNET); }

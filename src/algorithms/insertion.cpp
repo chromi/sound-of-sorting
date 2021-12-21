@@ -371,6 +371,18 @@ std::vector<size_t> ShellSortIncrements(size_t n, ShellSortIncrementType t)
 			break;
 		}
 
+		case SHELL_1982_SEDGEWICK_MODIFIED: {
+		// worst-case O(n^(4/3))
+		// 4^k + 3*2^(k-1) + 1
+		// 1, 3, 8, 23, 77, 281, ...
+			incs.push_back(1);
+			incs.push_back(3);
+			for(size_t i=4, j=3; i+j+1 < n; i *= 4, j *= 2) {
+				incs.push_back(i+j+1);
+			}
+			break;
+		}
+
 		case SHELL_1985_INCERPI: {
 		// This is the moderately famous Incerpi-Sedgewick sequence.
 		// generation function very complex, so taken by rote from OEIS A036569.
