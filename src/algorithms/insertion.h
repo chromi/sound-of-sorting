@@ -30,6 +30,7 @@
 
 void InsertionSort(class SortArray& a);
 void BinaryInsertionSort(class SortArray& a);
+void ExponentialInsertionSort(class SortArray& a);
 void BlockInsertionSort(class SortArray& a);
 
 void BubbleSort(class SortArray& a);
@@ -42,6 +43,8 @@ enum ShellSortIncrementType {
 	SHELL_1963_HIBBARD,
 	SHELL_1965_PAPERNOV,
 	SHELL_1971_PRATT,
+	SHELL_1971_PRATT_35,
+	SHELL_1971_PRATT_57,
 	SHELL_1973_KNUTH,
 	SHELL_1982_SEDGEWICK,
 	SHELL_1985_INCERPI,
@@ -76,6 +79,8 @@ static inline void ShellSort_Frank60(SortArray& A)			{ ShellSort(A, SHELL_1960_F
 static inline void ShellSort_Hibbard63(SortArray& A)		{ ShellSort(A, SHELL_1963_HIBBARD); }
 static inline void ShellSort_Papernov65(SortArray& A)		{ ShellSort(A, SHELL_1965_PAPERNOV); }
 static inline void ShellSort_Pratt71(SortArray& A)			{ ShellSort(A, SHELL_1971_PRATT); }
+static inline void ShellSort_Pratt71_35(SortArray& A)		{ ShellSort(A, SHELL_1971_PRATT_35); }
+static inline void ShellSort_Pratt71_57(SortArray& A)		{ ShellSort(A, SHELL_1971_PRATT_57); }
 static inline void ShellSort_Knuth73(SortArray& A)			{ ShellSort(A, SHELL_1973_KNUTH); }
 static inline void ShellSort_Sedgewick82(SortArray& A)		{ ShellSort(A, SHELL_1982_SEDGEWICK); }
 static inline void ShellSort_Incerpi85(SortArray& A)		{ ShellSort(A, SHELL_1985_INCERPI); }

@@ -313,6 +313,40 @@ std::vector<size_t> ShellSortIncrements(size_t n, ShellSortIncrementType t)
 			break;
 		}
 
+		case SHELL_1971_PRATT_35: {
+		// worst-case O(n (log n)^2), but high cost
+		// (3^p)*(5^q) for all non-negative p and q, in order
+		// 1, 3, 5, 9, 15, 25, 27, ...
+			for(size_t i=1; i < n; i *= 3) {
+				for(size_t j=1; i*j < n; j *= 5) {
+					size_t k = i*j;
+					auto x = incs.begin();
+
+					while(x != incs.end() && *x < k)
+						x++;
+					incs.insert(x, k);
+				}
+			}
+			break;
+		}
+
+		case SHELL_1971_PRATT_57: {
+		// worst-case O(n (log n)^2), but high cost
+		// (5^p)*(7^q) for all non-negative p and q, in order
+		// 1, 5, 7, 25, 35, 49, ...
+			for(size_t i=1; i < n; i *= 5) {
+				for(size_t j=1; i*j < n; j *= 7) {
+					size_t k = i*j;
+					auto x = incs.begin();
+
+					while(x != incs.end() && *x < k)
+						x++;
+					incs.insert(x, k);
+				}
+			}
+			break;
+		}
+
 		case SHELL_1973_KNUTH: {
 		// worst-case O(n^(3/2))
 		// (3^k - 1) / 2, up to ceil(N/3)
@@ -435,15 +469,15 @@ std::vector<size_t> ShellSortIncrements(size_t n, ShellSortIncrementType t)
 					incs.push_back((size_t) ceil(x));
 			} else if(t == SHELL_CIURA_PRATT) {
 				// extend sequence using a Pratt recurrence, if needed;
-				// (23^p)*(57^q) for all non-negative p and q, in order
+				// 701*(3^p)*(5^q) for all non-negative p and q, in order
 				// asymptotic complexity becomes O(N log^2 N)
-				for(size_t i=1; i < n; i *= 23) {
-					for(size_t j=1; j < n; j *= 57) {
+				for(size_t i=701; i < n; i *= 3) {
+					for(size_t j=1; j < n; j *= 5) {
 						size_t k = i*j;
 						auto x = incs.begin();
 
 						if(k >= n) break;
-						if(k <= 701) continue;
+						if(k == 701) continue;
 						while(x != incs.end() && *x < k)
 							x++;
 						incs.insert(x, k);
