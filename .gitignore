@@ -9,3 +9,5 @@ Makefile
 
 # ignore backup files
 /src/wxg/*~
+.DS_Store
+src/.DS_Store
