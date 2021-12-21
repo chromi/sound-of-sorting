@@ -24,6 +24,8 @@
 #include <wx/stopwatch.h>
 #include <wx/cmdline.h>
 
+#include <stdio.h>
+
 #include "SortArray.h"
 #include "SortAlgo.h"
 #include "algorithms/insertion.h"
@@ -89,7 +91,7 @@ struct SortedCheck
 
 int SortTestApp::OnRun()
 {
-    wxPrintf(_T("Sound of Sorting " PACKAGE_VERSION " - Algorithm Tester\n"));
+    printf("Sound of Sorting " PACKAGE_VERSION " - Algorithm Tester\n");
 
     bool all_good = true;
 
@@ -103,8 +105,8 @@ int SortTestApp::OnRun()
         if (!m_filter.IsEmpty() && !ae.name.Contains(m_filter))
             continue;
 
-        wxPrintf(_T("-----------------------------------------------------\n"));
-        wxPrintf(_T("Testing %s\n"), ae.name.c_str());
+        printf("-----------------------------------------------------\n");
+        printf("Testing %s\n", ae.name.mb_str().data());
 
         for (size_t sizei = 0; testsize[sizei]; ++sizei)
         {
@@ -126,24 +128,24 @@ int SortTestApp::OnRun()
                 long millitime = sw.Time();
 
                 if (!array.CheckSorted()) {
-                    wxPrintf(_T("FAILED(%s) "), inputlist[inputi].c_str());
+                    printf("FAILED(%s) ", inputlist[inputi].mb_str().data());
                     all_good = false;
                 }
                 else if (!sortcheck.check(array)) {
-                    wxPrintf(_T("FAILED(%s) "), inputlist[inputi].c_str());
+                    printf("FAILED(%s) ", inputlist[inputi].mb_str().data());
                     all_good = false;
                 }
 
-                wxPrintf(_T("%lu/i%lu -> %lu ms. "), n, inputi, millitime);
+                printf("%lu/i%lu -> %lu ms. ", n, inputi, millitime);
                 fflush(stdout);
             }
-            wxPrintf(_T("\n"));
+            printf("\n");
         }
 
-        wxPrintf(_T("\n"));
+        printf("\n");
     }
 
-        wxPrintf(_T("\n\nShellsort gap sequences:\n"));
+	printf("\n\nShellsort gap sequences:\n");
 
 	uint16_t t = SHELL_1959_SHELL;
 	while(1) {
@@ -151,10 +153,14 @@ int SortTestApp::OnRun()
 		if(incs.size() < 2)
 			break;
 		for(size_t i=0; i < incs.size(); i++)
-			wxPrintf("%u, ", (unsigned int) incs[i]);
-		wxPrintf("...\n");
+			printf("%u, ", (unsigned int) incs[i]);
+		printf("...\n");
 	}
 
+	if(all_good)
+		printf("All tests passed.\n");
+	else
+		printf("FAILURE.\n");
     return all_good ? 0 : -1;
 }
 

@@ -31,6 +31,8 @@
 #include "SortAlgo.h"
 #include "algorithms/pathological.h"
 
+#include <random>
+
 // ****************************************************************************
 // *** BogoSort and more slow sorts
 
@@ -63,6 +65,9 @@ bool BogoCheckSorted(SortArray& A)
 
 void BogoSort(SortArray& A)
 {
+	std::random_device rd;
+	std::mt19937 rng(rd());
+
 	// keep a permutation of [0,size)
 	std::vector<size_t> perm(A.size());
 
@@ -75,7 +80,7 @@ void BogoSort(SortArray& A)
 		if (BogoCheckSorted(A)) break;
 
 		// pick a random permutation of indexes
-		std::random_shuffle(perm.begin(), perm.end());
+		std::shuffle(perm.begin(), perm.end(), rng);
 
 		// permute array in-place
 		std::vector<char> pmark(A.size(), 0);

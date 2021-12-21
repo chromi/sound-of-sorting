@@ -121,6 +121,9 @@ void SortArray::FillInputlist(wxArrayString& list)
 
 void SortArray::FillData(unsigned int schema, size_t arraysize)
 {
+	std::random_device rd;
+	std::mt19937 rng(rd());
+
 	if (arraysize == 0) arraysize = 1;
 
 	ResetArray(arraysize);
@@ -130,7 +133,7 @@ void SortArray::FillData(unsigned int schema, size_t arraysize)
 		for (size_t i = 0; i < m_array.size(); ++i)
 			m_array[i] = ArrayItem(i+1);
 
-		std::random_shuffle(m_array.begin(), m_array.end());
+		std::shuffle(m_array.begin(), m_array.end(), rng);
 	}
 	else if (schema == 1) // Ascending [1,n]
 	{
@@ -157,7 +160,7 @@ void SortArray::FillData(unsigned int schema, size_t arraysize)
 			m_array[i] = ArrayItem(w + 1);
 		}
 
-		std::random_shuffle(m_array.begin(), m_array.end());
+		std::shuffle(m_array.begin(), m_array.end(), rng);
 	}
 	else if (schema == 4) // Quintic skew of [1,n]
 	{
@@ -174,7 +177,7 @@ void SortArray::FillData(unsigned int schema, size_t arraysize)
 			m_array[i] = ArrayItem(w + 1);
 		}
 
-		std::random_shuffle(m_array.begin(), m_array.end());
+		std::shuffle(m_array.begin(), m_array.end(), rng);
 	}
 	else if (schema == 5) // shuffled n-2 equal values in [1,n]
 	{
@@ -185,7 +188,7 @@ void SortArray::FillData(unsigned int schema, size_t arraysize)
 		}
 		m_array[m_array.size()-1] = ArrayItem(arraysize);
 
-		std::random_shuffle(m_array.begin(), m_array.end());
+		std::shuffle(m_array.begin(), m_array.end(), rng);
 	}
 	else if (schema == 6) // sine waves
 	{
@@ -219,7 +222,7 @@ void SortArray::FillData(unsigned int schema, size_t arraysize)
 			double w = (v + 1.0) / 2.0 * arraysize + 1;
 			m_array[i] = ArrayItem(w / 3 + 1);
 		}
-		std::random_shuffle(m_array.begin(), m_array.end());
+		std::shuffle(m_array.begin(), m_array.end(), rng);
 	}
 	else if (schema == 9) // Ascending [1,n], of which sqrt(n) shuffled
 	{
