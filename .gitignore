@@ -13,3 +13,4 @@ Makefile
 src/.DS_Store
 src/algorithms/.dirstamp
 src/wxg/.dirstamp
+src/sorting-test
