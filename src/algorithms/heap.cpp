@@ -93,14 +93,7 @@ void HeapSort(SortArray& A)
 
 namespace SmoothSortNS {
 
-	static const uint64_t LP[] = {
-		1, 1, 3, 5, 9, 15, 25, 41, 67, 109,
-		177, 287, 465, 753, 1219, 1973, 3193, 5167, 8361, 13529, 21891,
-		35421, 57313, 92735, 150049, 242785, 392835, 635621, 1028457,
-		1664079, 2692537, 4356617, 7049155, 11405773, 18454929, 29860703,
-		48315633, 78176337, 126491971, 204668309, 331160281, 535828591,
-	866988873 // the next number is > 31 bits.
-};
+static uint64_t LP[64] = { 0 };
 
 static void sift(SortArray& A, uint8_t pshift, size_t head)
 {
@@ -196,6 +189,13 @@ static void trinkle(SortArray& A, uint64_t p, uint8_t pshift, size_t head, bool 
 
 void sort(SortArray& A, const size_t lo, const size_t hi)
 {
+	if(!LP[0]) {
+		// Memoise Leonardo numbers
+		LP[0] = LP[1] = 1;
+		for(size_t i=2; i < 64; i++)
+			LP[i] = LP[i-1] + LP[i-2] + 1;
+	}
+
 	size_t head = lo; // the offset of the first element of the prefix into m
 
 	// These variables need a little explaining. If our string of heaps
