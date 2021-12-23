@@ -93,205 +93,215 @@ void HeapSort(SortArray& A)
 
 namespace SmoothSortNS {
 
-static uint64_t LP[64] = { 0 };
-
-static void sift(SortArray& A, uint8_t pshift, size_t head)
+// 64-bit version of count-trailing-zeroes function
+static uint8_t ctz64(uint64_t x)
 {
-	// Improved sift function to use two comparisons per step, not three
+	if(x & 1) return 0;
+	if(!x)    return 64;
 
+	if(x & 0xFFFFFFFF)
+		return __builtin_ctz((uint32_t) x);
+	else
+		return __builtin_ctz((uint32_t) (x >> 32)) + 32;
+}
+
+static const uint64_t one = 1;
+static uint64_t LP[65] = { 0 };
+
+static void sift(SortArray& A, uint8_t order, size_t head)
+{
+	if(order < 2)
+		return;
+
+	// Improved sift function to use two comparisons per step, not three
 	const value_type val = A[head];
 
-	while (pshift > 1)
+	while(order > 1)
 	{
 		const size_t rt = head - 1;
-		const size_t lf = head - 1 - LP[pshift - 2];
+		const size_t lf = rt - LP[order-2];
 
 		const value_type Alf = A[lf], Art = A[rt];
 
-		if (Alf < Art) {
+		if(Alf < Art) {
 			// sift into right child
 			if (Art < val)
 				break;
 			A.swap(head, rt);
 			head = rt;
-			pshift -= 2;
+			order -= 2;
 		} else {
 			// sift into left child
 			if (Alf < val)
 				break;
 			A.swap(head, lf);
 			head = lf;
-			pshift -= 1;
+			order -= 1;
 		}
 	}
 }
 
-static void trinkle(SortArray& A, uint64_t p, uint8_t pshift, size_t head, bool isTrusty)
+static void trinkle(SortArray& A, uint64_t heaps, size_t head)
 {
 	const value_type val = A[head];
 
-	while (p > 1)
-	{
-		const size_t stepson = head - LP[pshift];
+	while(heaps) {
+		const uint8_t order = ctz64(heaps);
 
-		const value_type Astep = A[stepson];
-
-		if(isTrusty || pshift <= 1) {
-			// only compare head wih stepson
-			if(val < Astep)
-				isTrusty = false;
-			else
-				return;
-		} else if(val < Astep) {
-			const size_t rt = head - 1;
-			const size_t lf = head - 1 - LP[pshift - 2];
-
-			const value_type Alf = A[lf], Art = A[rt];
-
-			if (Alf < Art) {
-				// compare head, stepson, and right child
-				if(Astep < Art) {
-					// by transitive property, val < Astep < Art, thus val < Art
-					// just sift into right child
-					A.swap(head, rt);
-					sift(A, pshift-2, rt);
-					return;
-				}
-			} else {
-				// compare head, stepson, and left child
-				if(Astep < Alf) {
-					// by transitive property, val < Astep < Alf, thus val < Alf
-					// just sift into left child
-					A.swap(head, lf);
-					sift(A, pshift-1, lf);
-					return;
-				}
-			}
-		} else {
-			// just sift into current tree
-			sift(A, pshift, head);
+		// leftmost heap has no stepson, just sift
+		if((heaps >> order) == one) {
+			sift(A, order, head);
 			return;
 		}
 
-		A.swap(head, stepson);
-		head = stepson;
+		const size_t stepson = head - LP[order];
+		const value_type Astep = A[stepson];
 
-		uint8_t trail = __builtin_ctz(p & ~1);
-		p >>= trail;
-		pshift += trail;
+		if(val < Astep) {
+			if(order > 1) {
+				// check stepson against children
+				const size_t rt = head - 1;
+				const size_t lf = rt - LP[order-2];
+				const value_type Alf = A[lf], Art = A[rt];
+
+				if (Alf < Art) {
+					// compare head, stepson, and right child
+					if(Astep < Art) {
+						// by transitive property, val < Astep < Art, thus val < Art
+						// sift into right child
+						A.swap(head, rt);
+						sift(A, order-2, rt);
+						return;
+					}
+				} else {
+					// compare head, stepson, and left child
+					if(Astep < Alf) {
+						// by transitive property, val < Astep < Alf, thus val < Alf
+						// sift into left child
+						A.swap(head, lf);
+						sift(A, order-1, lf);
+						return;
+					}
+				}
+			}
+
+			// move to next root on left
+			A.swap(head, stepson);
+			head = stepson;
+
+			heaps &= ~(one << order);
+		} else {
+			// sift into current tree
+			sift(A, order, head);
+			return;
+		}
 	}
-
-	// we reached the root of the leftmost complete heap
-	if(isTrusty)
-		return;
-	sift(A, pshift, head);
 }
 
-void sort(SortArray& A, const size_t lo, const size_t hi)
+static void semitrinkle(SortArray& A, const uint64_t heaps, const size_t head)
+{
+	// Semitrinkle assumes the current heap is fully valid, but the root may need to be moved left
+	const uint8_t order = ctz64(heaps);
+
+	// leftmost heap has no stepson, just return
+	if((heaps >> order) == 1)
+		return;
+
+	const size_t stepson = head - LP[order];
+
+	if(A[head] < A[stepson]) {
+		A.swap(head, stepson);
+
+		if(order == 0 && (heaps & 2))
+			semitrinkle(A, heaps & ~one, stepson);	// next one is order 1
+		else
+			trinkle(A, heaps & ~(one << order), stepson);
+	}
+}
+
+void sort(SortArray& A, const size_t l, const size_t r)
 {
 	if(!LP[0]) {
 		// Memoise Leonardo numbers
 		LP[0] = LP[1] = 1;
-		for(size_t i=2; i < 64; i++)
+		for(size_t i=2; i < 65; i++)
 			LP[i] = LP[i-1] + LP[i-2] + 1;
 	}
+	if(r-l >= LP[64])
+		throw;	// limit is somewhere between 34*10^12 and 2^45 - increase the size of bitvector if you *really* need to
 
-	size_t head = lo; // the offset of the first element of the prefix into m
+	uint64_t heaps = 0; // bitmap of complete Leonardo heap orders
 
-	// These variables need a little explaining. If our string of heaps
-	// is of length 38, then the heaps will be of size 25+9+3+1, which are
-	// Leonardo numbers 6, 4, 2, 1.
-	// Turning this into a binary number, we get b01010110 = 0x56. We represent
-	// this number as a pair of numbers by right-shifting all the zeros and
-	// storing the mantissa and exponent as "p" and "pshift".
-	// This is handy, because the exponent is the index into L[] giving the
-	// size of the rightmost heap, and because we can instantly find out if
-	// the rightmost two heaps are consecutive Leonardo numbers by checking
-	// (p&3)==3
+	// Start by building the forest of heaps
+	for(size_t head = l; head < r; head++) {
+		const uint8_t order = ctz64(heaps);
 
-	uint64_t p = 0; // the bitmap of the current standard concatenation >> pshift
-	uint8_t pshift = 2;
+		if(((heaps >> order) & 3) == 3) {
+			// Rightmost heaps are of consecutive order, so merge them
+			heaps += one << order;
+			sift(A, order+2, head);
 
-	while (head <= hi)
-	{
-		if ((p & 3) == 3) {
-			// Add 1 by merging the first two blocks into a larger one.
-			// The next Leonardo number is one bigger.
-			p >>= 2;
-			pshift += 2;
-			p |= 1;
-
-			if (LP[pshift - 1] >= hi - head) {
-				// this block is its final size.
-				trinkle(A, p, pshift, head, false);
-			} else {
-				// this block will get merged. Just make it trusty.
-				sift(A, pshift, head);
-			}
+			for(size_t i = head, j = LP[order+2]; j--; i--)
+				A.mark(i, order+6);
 		} else {
 			// adding a new block of length 1
-			if (pshift == 1) {
-				// LP[1] is being used, so we add use LP[0]
-				p <<= 1;
-				pshift--;
+			if (heaps & 2) {
+				// L(1) already present, so this must be L(0) sibling
+				heaps |= one;
+				A.mark(head, 4);
 			} else {
-				// shift out to position 1, add LP[1]
-				p <<= (pshift - 1);
-				pshift = 1;
+				// L(1) takes priority over L(0)
+				heaps |= one << 1;
+				A.mark(head, 5);
 			}
-			p |= 1;
-
-			// check if these will be root nodes
-			if(hi - head < 2)
-				trinkle(A, p, pshift, head, false);
 		}
-		head++;
-
-		for(size_t i = head - LP[pshift]; i < head; i++)
-			A.mark(i, pshift+4);
 	}
 
-	// point back down to root of last tree, rather than just past it
-	head--;
+	// Sort the root nodes
+	for(size_t head = l, order = 63; head < r; order--) {
+		if(heaps & (one << order)) {
+			uint64_t forest = heaps & ~((one << order) - 1);
+			head += LP[order];
+			semitrinkle(A, forest, head-1);
+		}
+	}
 
-	while (pshift != 1 || p != 1)
-	{
-		if (pshift < 2) {
-			// block of length 1. No fiddling needed
-			uint8_t trail = __builtin_ctz(p & ~1);
-			p >>= trail;
-			pshift += trail;
+	// Now extract one element at a time
+	for(size_t head = r-1; head > l; head--) {
+		const uint8_t order = ctz64(heaps);
 
-			A.mark(head--, 2);
+		if(order < 2) {
+			// L(0) and L(1) are trivial
+			A.mark(head, 2);
+			heaps = (heaps - one) & ~one;
 		} else {
-			// This block gets broken into three bits. The rightmost bit is a
-			// block of length 1. The left hand part is split into two, a block
-			// of length LP[pshift+1] and one of LP[pshift].  Both these two
-			// are appropriately heapified, but the root nodes are not
-			// necessarily in order. We therefore semitrinkle both of them
-			size_t i = head+1 - LP[pshift], j = LP[pshift-1], k = LP[pshift-2];
-			while(j--)
-				A.mark(i++, pshift+3);
+			// Split L(k) heap into L(k-1) | L(k-2) | head
+			size_t i = head, j = LP[order-1], k = LP[order-2];
+
+			A.mark(i--, 2);
 			while(k--)
-				A.mark(i++, pshift+2);
+				A.mark(i--, order+2);
+			while(j--)
+				A.mark(i--, order+3);
 
-			p <<= 2;
-			p ^= 7;
-			pshift -= 2;
+			const size_t rt = head - 1, lf = rt - LP[order-2];
 
-			A.mark(head--, 2);
+			// Ensure roots are in sorted order
+			heaps -= one << (order-1);
+			semitrinkle(A, heaps, lf);
+			heaps += one << (order-2);
+			semitrinkle(A, heaps, rt);
 
-			trinkle(A, p >> 1, pshift + 1, head - LP[pshift], true);
-			trinkle(A, p, pshift, head, true);
 		}
 	}
+	A.mark(l, 2);
 }
 
 } // namespace SmoothSortNS
 
 void SmoothSort(SortArray& A)
 {
-	return SmoothSortNS::sort(A, 0, A.size()-1);
+	return SmoothSortNS::sort(A, 0, A.size());
 }
 
 // ****************************************************************************
