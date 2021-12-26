@@ -119,16 +119,18 @@ static void sift(SortArray& A, uint8_t order, size_t head)
 
 		if(A[lf] < A[rt]) {
 			// sift into right child
-			if (A[rt] < A[head])
+			if (A[rt] > A[head])
+				A.swap(head, rt);
+			else
 				break;
-			A.swap(head, rt);
 			head = rt;
 			order -= 2;
 		} else {
 			// sift into left child
-			if (A[lf] < A[head])
+			if (A[lf] > A[head])
+				A.swap(head, lf);
+			else
 				break;
-			A.swap(head, lf);
 			head = lf;
 			order -= 1;
 		}
