@@ -89,8 +89,6 @@ void HeapSort(SortArray& A)
 // ****************************************************************************
 // *** Smooth Sort
 
-// from http://en.wikipediA.org/wiki/Smoothsort
-
 namespace SmoothSortNS {
 
 // 64-bit version of count-trailing-zeroes function
@@ -114,25 +112,21 @@ static void sift(SortArray& A, uint8_t order, size_t head)
 		return;
 
 	// Improved sift function to use two comparisons per step, not three
-	const value_type val = A[head];
-
 	while(order > 1)
 	{
 		const size_t rt = head - 1;
 		const size_t lf = rt - LP[order-2];
 
-		const value_type Alf = A[lf], Art = A[rt];
-
-		if(Alf < Art) {
+		if(A[lf] < A[rt]) {
 			// sift into right child
-			if (Art < val)
+			if (A[rt] < A[head])
 				break;
 			A.swap(head, rt);
 			head = rt;
 			order -= 2;
 		} else {
 			// sift into left child
-			if (Alf < val)
+			if (A[lf] < A[head])
 				break;
 			A.swap(head, lf);
 			head = lf;
@@ -143,8 +137,6 @@ static void sift(SortArray& A, uint8_t order, size_t head)
 
 static void trinkle(SortArray& A, uint64_t heaps, size_t head)
 {
-	const value_type val = A[head];
-
 	while(heaps) {
 		const uint8_t order = ctz64(heaps);
 
@@ -155,19 +147,17 @@ static void trinkle(SortArray& A, uint64_t heaps, size_t head)
 		}
 
 		const size_t stepson = head - LP[order];
-		const value_type Astep = A[stepson];
 
-		if(val < Astep) {
+		if(A[head] < A[stepson]) {
 			if(order > 1) {
 				// check stepson against children
 				const size_t rt = head - 1;
 				const size_t lf = rt - LP[order-2];
-				const value_type Alf = A[lf], Art = A[rt];
 
-				if (Alf < Art) {
+				if (A[lf] < A[rt]) {
 					// compare head, stepson, and right child
-					if(Astep < Art) {
-						// by transitive property, val < Astep < Art, thus val < Art
+					if(A[stepson] < A[rt]) {
+						// by transitive property, A[head] < A[stepson] < A[rt], thus A[head] < A[rt]
 						// sift into right child
 						A.swap(head, rt);
 						sift(A, order-2, rt);
@@ -175,8 +165,8 @@ static void trinkle(SortArray& A, uint64_t heaps, size_t head)
 					}
 				} else {
 					// compare head, stepson, and left child
-					if(Astep < Alf) {
-						// by transitive property, val < Astep < Alf, thus val < Alf
+					if(A[stepson] < A[lf]) {
+						// by transitive property, A[head] < A[stepson] < A[lf], thus A[head] < A[lf]
 						// sift into left child
 						A.swap(head, lf);
 						sift(A, order-1, lf);
@@ -204,7 +194,7 @@ static void semitrinkle(SortArray& A, const uint64_t heaps, const size_t head)
 	const uint8_t order = ctz64(heaps);
 
 	// leftmost heap has no stepson, just return
-	if((heaps >> order) == 1)
+	if((heaps >> order) == one)
 		return;
 
 	const size_t stepson = head - LP[order];
