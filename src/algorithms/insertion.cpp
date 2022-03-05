@@ -347,6 +347,23 @@ std::vector<size_t> ShellSortIncrements(size_t n, ShellSortIncrementType t)
 			break;
 		}
 
+		case SHELL_1971_PRATT_711: {
+		// worst-case O(n (log n)^2), but high cost
+		// (7^p)*(11^q) for all non-negative p and q, in order
+		// 1, 7, 11, 49, 77, ...
+			for(size_t i=1; i < n; i *= 7) {
+				for(size_t j=1; i*j < n; j *= 11) {
+					size_t k = i*j;
+					auto x = incs.begin();
+
+					while(x != incs.end() && *x < k)
+						x++;
+					incs.insert(x, k);
+				}
+			}
+			break;
+		}
+
 		case SHELL_1973_KNUTH: {
 		// worst-case O(n^(3/2))
 		// (3^k - 1) / 2, up to ceil(N/3)
@@ -454,6 +471,33 @@ std::vector<size_t> ShellSortIncrements(size_t n, ShellSortIncrementType t)
 		// worst-case complexity unknown; designed for average-case performance
 			for(double x=1; x < n; x = x * 2.25 + 1)
 				incs.push_back((size_t) ceil(x));
+			break;
+		}
+
+		case SHELL_1996_JANSON_3PASS: {
+		// average-case O(n^(23/15))
+		// find two values {h,g} which are coprime and near n^(7/15) and n^(1/5) respectively
+			double hh = pow(n, 7.0/15), gg = pow(n, 1.0/5);
+			size_t h = nearbyint(hh), g = nearbyint(gg);
+			bool coprime;
+
+			do {
+				coprime = true;
+				size_t c = g, d = h;
+				while(d) {
+					size_t e = c % d;
+					c = d;
+					d = e;
+				}
+				if(c > 1) {
+					h++;
+					coprime = false;
+				}
+			} while(!coprime);
+
+			incs.push_back(1);
+			incs.push_back(g);
+			incs.push_back(h);
 			break;
 		}
 

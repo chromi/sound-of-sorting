@@ -45,6 +45,7 @@ enum ShellSortIncrementType {
 	SHELL_1971_PRATT,
 	SHELL_1971_PRATT_35,
 	SHELL_1971_PRATT_57,
+	SHELL_1971_PRATT_711,
 	SHELL_1973_KNUTH,
 	SHELL_1982_SEDGEWICK,
 	SHELL_1982_SEDGEWICK_MODIFIED,
@@ -52,6 +53,7 @@ enum ShellSortIncrementType {
 	SHELL_1986_SEDGEWICK,
 	SHELL_1991_GONNET,
 	SHELL_1992_TOKUDA,
+	SHELL_1996_JANSON_3PASS,
 	SHELL_2001_CIURA,
 	SHELL_CIURA_TOKUDA,
 	SHELL_CIURA_PRATT,
@@ -82,6 +84,7 @@ static inline void ShellSort_Papernov65(SortArray& A)		{ ShellSort(A, SHELL_1965
 static inline void ShellSort_Pratt71(SortArray& A)			{ ShellSort(A, SHELL_1971_PRATT); }
 static inline void ShellSort_Pratt71_35(SortArray& A)		{ ShellSort(A, SHELL_1971_PRATT_35); }
 static inline void ShellSort_Pratt71_57(SortArray& A)		{ ShellSort(A, SHELL_1971_PRATT_57); }
+static inline void ShellSort_Pratt71_711(SortArray& A)		{ ShellSort(A, SHELL_1971_PRATT_711); }
 static inline void ShellSort_Knuth73(SortArray& A)			{ ShellSort(A, SHELL_1973_KNUTH); }
 static inline void ShellSort_Sedgewick82(SortArray& A)		{ ShellSort(A, SHELL_1982_SEDGEWICK); }
 static inline void ShellSort_Sedgewick82Mod(SortArray& A)	{ ShellSort(A, SHELL_1982_SEDGEWICK_MODIFIED); }
@@ -89,6 +92,7 @@ static inline void ShellSort_Incerpi85(SortArray& A)		{ ShellSort(A, SHELL_1985_
 static inline void ShellSort_Sedgewick86(SortArray& A)		{ ShellSort(A, SHELL_1986_SEDGEWICK); }
 static inline void ShellSort_Gonnet91(SortArray& A)			{ ShellSort(A, SHELL_1991_GONNET); }
 static inline void ShellSort_Tokuda92(SortArray& A)			{ ShellSort(A, SHELL_1992_TOKUDA); }
+static inline void ShellSort_Janson96(SortArray& A)			{ ShellSort(A, SHELL_1996_JANSON_3PASS); }
 static inline void ShellSort_Ciura2001(SortArray& A)		{ ShellSort(A, SHELL_2001_CIURA); }
 static inline void ShellSort_CiuraTokuda(SortArray& A)		{ ShellSort(A, SHELL_CIURA_TOKUDA); }
 static inline void ShellSort_CiuraPratt(SortArray& A)		{ ShellSort(A, SHELL_CIURA_PRATT); }
