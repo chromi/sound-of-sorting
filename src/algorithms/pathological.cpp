@@ -118,7 +118,9 @@ void BogoSort(SortArray& A)
 
 void BozoSort(SortArray& A)
 {
-	srand(time(NULL));
+	std::random_device rd;
+	std::mt19937 rng(rd());
+	std::uniform_int_distribution<size_t> uid(0, A.size()-1);
 
 	while (1)
 	{
@@ -126,7 +128,48 @@ void BozoSort(SortArray& A)
 		if (BogoCheckSorted(A)) break;
 
 		// swap two random items
-		A.swap(rand() % A.size(), rand() % A.size());
+		A.swap(uid(rng), uid(rng));
+	}
+}
+
+// ****************************************************************************
+// *** BoJo Sort
+//
+// Dithers around ineffectually, doing the right thing after exhausting all other
+// options, or when trapped by the walls closing in.
+
+void BoJoSort(SortArray& A)
+{
+	size_t redWall = 1, blueWall = A.size()-1;
+
+	std::random_device rd;
+	std::mt19937 rng(rd());
+
+	while(redWall <= blueWall) {
+		std::uniform_int_distribution<size_t> uid(redWall, blueWall);
+		size_t i = uid(rng);
+
+		if(A[i] < A[i-1]) {
+			A.swap(i, i-1);
+
+			if(i == redWall && redWall > 1) {
+				redWall--;
+				A.unmark(redWall-1);
+			}
+			if(i == blueWall && blueWall < A.size()-1) {
+				blueWall++;
+				A.unmark(blueWall);
+			}
+		} else {
+			if(i == redWall) {
+				A.mark(redWall-1, 7);
+				redWall++;
+			}
+			if(i == blueWall) {
+				A.mark(blueWall, 12);
+				blueWall--;
+			}
+		}
 	}
 }
 

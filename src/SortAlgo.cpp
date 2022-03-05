@@ -247,6 +247,8 @@ const struct AlgoEntry g_algolist[] =
 //	wxEmptyString },
 //	{ _("Bozo Sort"), &BozoSort, 10, UINT_MAX,
 //	wxEmptyString },
+	{ _("BoJo Sort"), &BoJoSort, 12000, inversion_count_instrumented,
+	wxEmptyString },
 	{ _("Stooge Sort"), &StoogeSort, 1050, inversion_count_instrumented,
 	wxEmptyString },
 	{ _("Slow Sort"), &SlowSort, 500, inversion_count_instrumented,

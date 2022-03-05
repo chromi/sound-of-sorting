@@ -30,5 +30,6 @@
 
 void BogoSort(class SortArray& a);
 void BozoSort(class SortArray& a);
+void BoJoSort(class SortArray& a);
 void StoogeSort(class SortArray& a);
 void SlowSort(class SortArray& a);
