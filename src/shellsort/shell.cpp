@@ -245,7 +245,7 @@ std::vector<Telemetry> ShellSortTokuda92(std::vector<T>& A)
 		gaps.push_back((size_t) ceil(gap));
 
 	tmv.reserve(gaps.size());
-	
+
 	while(gaps.size()) {
 		size_t gap = gaps.back();
 
@@ -370,7 +370,7 @@ std::vector<Telemetry> ShellSortFibonacci3(std::vector<T>& A)
 	return tmv;
 }
 
-size_t gcd(size_t a, size_t b)
+uint64_t gcd(uint64_t a, uint64_t b)
 {
 	while(b) {
 		size_t c = a % b;
