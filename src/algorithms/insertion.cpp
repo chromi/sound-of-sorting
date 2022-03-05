@@ -501,6 +501,62 @@ std::vector<size_t> ShellSortIncrements(size_t n, ShellSortIncrementType t)
 			break;
 		}
 
+		case SHELL_1996_JANSON_4PASS: {
+		// find three values {i,h,g} which are coprime and near n^(11/15), n^(7/15) and n^(1/5) respectively
+			incs.push_back(1);
+
+			for(size_t i = 3; i < 15; i += 4) {
+				double x = pow(n, i / 15.0);
+				size_t y = nearbyint(x);
+				bool coprime;
+
+				do {
+					coprime = true;
+					for(auto z = incs.begin(); z != incs.end(); z++) {
+						size_t c = y, d = *z;
+						while(d) {
+							size_t e = c % d;
+							c = d;
+							d = e;
+						}
+						if(c > 1) {
+							y++;
+							coprime = false;
+						}
+					}
+				} while(!coprime);
+
+				incs.push_back(x);
+			}
+			break;
+		}
+
+		case SHELL_UNIFORM_3PASS: {
+		// find two values {h,g} which are coprime and near n^(2/3) and n^(1/3) respectively
+			double hh = pow(n, 2.0/3), gg = pow(n, 1.0/3);
+			size_t h = nearbyint(hh), g = nearbyint(gg);
+			bool coprime;
+
+			do {
+				coprime = true;
+				size_t c = g, d = h;
+				while(d) {
+					size_t e = c % d;
+					c = d;
+					d = e;
+				}
+				if(c > 1) {
+					h++;
+					coprime = false;
+				}
+			} while(!coprime);
+
+			incs.push_back(1);
+			incs.push_back(g);
+			incs.push_back(h);
+			break;
+		}
+
 		case SHELL_2001_CIURA:
 		case SHELL_CIURA_TOKUDA:
 		case SHELL_CIURA_FIBONACCI:

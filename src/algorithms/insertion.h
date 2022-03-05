@@ -54,6 +54,8 @@ enum ShellSortIncrementType {
 	SHELL_1991_GONNET,
 	SHELL_1992_TOKUDA,
 	SHELL_1996_JANSON_3PASS,
+	SHELL_1996_JANSON_4PASS,
+	SHELL_UNIFORM_3PASS,
 	SHELL_2001_CIURA,
 	SHELL_CIURA_TOKUDA,
 	SHELL_CIURA_PRATT,
@@ -93,6 +95,8 @@ static inline void ShellSort_Sedgewick86(SortArray& A)		{ ShellSort(A, SHELL_198
 static inline void ShellSort_Gonnet91(SortArray& A)			{ ShellSort(A, SHELL_1991_GONNET); }
 static inline void ShellSort_Tokuda92(SortArray& A)			{ ShellSort(A, SHELL_1992_TOKUDA); }
 static inline void ShellSort_Janson96(SortArray& A)			{ ShellSort(A, SHELL_1996_JANSON_3PASS); }
+static inline void ShellSort_Janson96Mod(SortArray& A)		{ ShellSort(A, SHELL_1996_JANSON_4PASS); }
+static inline void ShellSort_Uniform3(SortArray& A)			{ ShellSort(A, SHELL_UNIFORM_3PASS); }
 static inline void ShellSort_Ciura2001(SortArray& A)		{ ShellSort(A, SHELL_2001_CIURA); }
 static inline void ShellSort_CiuraTokuda(SortArray& A)		{ ShellSort(A, SHELL_CIURA_TOKUDA); }
 static inline void ShellSort_CiuraPratt(SortArray& A)		{ ShellSort(A, SHELL_CIURA_PRATT); }
