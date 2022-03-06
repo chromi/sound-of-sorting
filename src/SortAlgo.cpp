@@ -233,6 +233,11 @@ const struct AlgoEntry g_algolist[] =
 	{ _("Cycle Sort"), &CycleSort, 10240, UINT_MAX,
 	wxEmptyString },
 
+	{ _("Circle Sort"), &CircleSort, UINT_MAX, UINT_MAX,
+	wxEmptyString },
+	{ _("Quad Circle Sort"), &QuadCircleSort, UINT_MAX, UINT_MAX,
+	wxEmptyString },
+
 	{ _("Radix Sort (LSD)"), &RadixSortLSD, UINT_MAX, UINT_MAX,
 	_("Least significant digit radix sort, which copies item into a shadow "
 		"array during counting.") },
