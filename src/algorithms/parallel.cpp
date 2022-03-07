@@ -107,18 +107,19 @@ void CircleSort(SortArray& A)
 bool QuadCircleSort(SortArray& A, const size_t l, const size_t r)
 {
 	bool anySwapped = false;
-	const size_t n = r-l, n2 = n/2, m = r-n2;
+	const size_t n = r-l, n2 = n/2, m = l+n2;
 
 	if(n < 2)
 		return false;
 
 	for(size_t i=l, j=r-1; j-i > 5; i += 2, j -= 2) {
 		// 4-element sorting network
-		anySwapped |= cmpSwap(A, i  ,j  );
-		anySwapped |= cmpSwap(A, i+1,j-1);
-		anySwapped |= cmpSwap(A, i  ,i+1);
-		anySwapped |= cmpSwap(A, j-1,j  );
-		anySwapped |= cmpSwap(A, i+1,j-1);
+		const size_t a=i, b=i+1, c=j-1, d=j;
+		anySwapped |= cmpSwap(A, a,d);
+		anySwapped |= cmpSwap(A, b,c);
+		anySwapped |= cmpSwap(A, a,b);
+		anySwapped |= cmpSwap(A, c,d);
+		anySwapped |= cmpSwap(A, b,c);
 	}
 
 	switch(n % 4) {
@@ -133,12 +134,12 @@ bool QuadCircleSort(SortArray& A, const size_t l, const size_t r)
 		break;
 
 	case 0: { // 4-element sorting network
-			const size_t i=m-2, j=m+1;
-			anySwapped |= cmpSwap(A, i  ,j  );
-			anySwapped |= cmpSwap(A, i+1,j-1);
-			anySwapped |= cmpSwap(A, i  ,i+1);
-			anySwapped |= cmpSwap(A, j-1,j  );
-			anySwapped |= cmpSwap(A, i+1,j-1);
+			const size_t a=m-2, b=m-1, c=m, d=m+1;
+			anySwapped |= cmpSwap(A, a,d);
+			anySwapped |= cmpSwap(A, b,c);
+			anySwapped |= cmpSwap(A, a,b);
+			anySwapped |= cmpSwap(A, c,d);
+			anySwapped |= cmpSwap(A, b,c);
 			break;
 		}
 
@@ -160,7 +161,7 @@ bool QuadCircleSort(SortArray& A, const size_t l, const size_t r)
 	if(n <= 5)
 		return anySwapped;
 
-	return anySwapped | CircleSort(A, l, m) | CircleSort(A, m, r);
+	return anySwapped | QuadCircleSort(A, l, m) | QuadCircleSort(A, m, r);
 }
 
 void QuadCircleSort(SortArray& A)
