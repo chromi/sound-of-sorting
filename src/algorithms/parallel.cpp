@@ -80,7 +80,7 @@ static inline bool cmpSwap(SortArray& A, const size_t x, const size_t y)
 bool CircleSort(SortArray& A, const size_t l, const size_t r)
 {
 	bool anySwapped = false;
-	const size_t n = r-l, n2 = n/2, m = r-n2;
+	const size_t n = r-l, n2 = n/2, m = l+n2;
 
 	if(n < 2)
 		return false;
@@ -88,8 +88,11 @@ bool CircleSort(SortArray& A, const size_t l, const size_t r)
 	for(size_t i=l, j=r-1; i < j; i++, j--)
 		anySwapped |= cmpSwap(A, i,j);
 
-	if(n > 1 && n % 2)
+	if(n > 2 && n % 2) {
+		// complete a 3-element sorting network around the middle element
 		anySwapped |= cmpSwap(A, m-1, m);
+		anySwapped |= cmpSwap(A, m, m+1);
+	}
 
 	return anySwapped | CircleSort(A, l, m) | CircleSort(A, m, r);
 }
@@ -112,7 +115,7 @@ bool QuadCircleSort(SortArray& A, const size_t l, const size_t r)
 	if(n < 2)
 		return false;
 
-	for(size_t i=l, j=r-1; j-i > 5; i += 2, j -= 2) {
+	for(size_t i=l, j=r-1; j-i >= 5; i += 2, j -= 2) {
 		// 4-element sorting network
 		const size_t a=i, b=i+1, c=j-1, d=j;
 		anySwapped |= cmpSwap(A, a,d);
