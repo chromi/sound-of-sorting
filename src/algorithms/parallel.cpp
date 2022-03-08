@@ -111,58 +111,32 @@ bool QuadCircleSort(SortArray& A, const size_t l, const size_t r)
 {
 	bool anySwapped = false;
 	const size_t n = r-l, n2 = n/2, m = l+n2;
+	size_t i,j;
 
 	if(n < 2)
 		return false;
 
-	for(size_t i=l, j=r-1; j-i >= 5; i += 2, j -= 2) {
-		// 4-element sorting network
+	for(i=l, j=r-1; j-i >= 3; i++, j--) {
+		// 4-element sorting network, truncated
 		const size_t a=i, b=i+1, c=j-1, d=j;
+
 		anySwapped |= cmpSwap(A, a,d);
 		anySwapped |= cmpSwap(A, b,c);
 		anySwapped |= cmpSwap(A, a,b);
 		anySwapped |= cmpSwap(A, c,d);
+	}
+
+	if(j-i == 2) {
+		// 3-element sorting network
+		const size_t a=i, b=i+1, c=j;
+
+		anySwapped |= cmpSwap(A, a,c);
+		anySwapped |= cmpSwap(A, a,b);
 		anySwapped |= cmpSwap(A, b,c);
+	} else if(j-i == 1) {
+		// middle pair
+		anySwapped |= cmpSwap(A, i,j);
 	}
-
-	switch(n % 4) {
-	case 2:
-		anySwapped |= cmpSwap(A, m-1, m);
-		break;
-
-	case 3: // 3-element sorting network
-		anySwapped |= cmpSwap(A, m-1, m+1);
-		anySwapped |= cmpSwap(A, m-1, m  );
-		anySwapped |= cmpSwap(A, m  , m+1);
-		break;
-
-	case 0: { // 4-element sorting network
-			const size_t a=m-2, b=m-1, c=m, d=m+1;
-			anySwapped |= cmpSwap(A, a,d);
-			anySwapped |= cmpSwap(A, b,c);
-			anySwapped |= cmpSwap(A, a,b);
-			anySwapped |= cmpSwap(A, c,d);
-			anySwapped |= cmpSwap(A, b,c);
-			break;
-		}
-
-	case 1: { // 5-element sorting network
-			const size_t a=m-2, b=m-1, c=m, d=m+1, e=m+2;
-			anySwapped |= cmpSwap(A, a,e);
-			anySwapped |= cmpSwap(A, b,d);
-			anySwapped |= cmpSwap(A, a,b);
-			anySwapped |= cmpSwap(A, c,d);
-			anySwapped |= cmpSwap(A, a,c);
-			anySwapped |= cmpSwap(A, b,e);
-			anySwapped |= cmpSwap(A, b,c);
-			anySwapped |= cmpSwap(A, d,e);
-			anySwapped |= cmpSwap(A, c,d);
-			break;
-		}
-	}
-
-	if(n <= 5)
-		return anySwapped;
 
 	return anySwapped | QuadCircleSort(A, l, m) | QuadCircleSort(A, m, r);
 }
