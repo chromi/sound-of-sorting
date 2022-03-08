@@ -138,6 +138,9 @@ bool QuadCircleSort(SortArray& A, const size_t l, const size_t r)
 		anySwapped |= cmpSwap(A, i,j);
 	}
 
+	if(!anySwapped || n < 5)	// no inversions found or remaining in this partition
+		return anySwapped;
+
 	return anySwapped | QuadCircleSort(A, l, m) | QuadCircleSort(A, m, r);
 }
 
