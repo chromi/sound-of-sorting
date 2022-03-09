@@ -109,7 +109,7 @@ void CircleSort(SortArray& A)
 
 bool QuadCircleSort(SortArray& A, const size_t l, const size_t r)
 {
-	bool anySwapped = false;
+	bool anySwapped = false, xSwapped = false, lSwapped = false, rSwapped = false;
 	const size_t n = r-l, n2 = n/2, m = l+n2;
 	size_t i,j;
 
@@ -120,28 +120,35 @@ bool QuadCircleSort(SortArray& A, const size_t l, const size_t r)
 		// 4-element sorting network, truncated
 		const size_t a=i, b=i+1, c=j-1, d=j;
 
-		anySwapped |= cmpSwap(A, a,d);
-		anySwapped |= cmpSwap(A, b,c);
-		anySwapped |= cmpSwap(A, a,b);
-		anySwapped |= cmpSwap(A, c,d);
+		xSwapped |= cmpSwap(A, a,d);
+		xSwapped |= cmpSwap(A, b,c);
+		lSwapped |= cmpSwap(A, a,b);
+		rSwapped |= cmpSwap(A, c,d);
 	}
 
 	if(j-i == 2) {
 		// 3-element sorting network
 		const size_t a=i, b=i+1, c=j;
 
-		anySwapped |= cmpSwap(A, a,c);
-		anySwapped |= cmpSwap(A, a,b);
-		anySwapped |= cmpSwap(A, b,c);
+		xSwapped |= cmpSwap(A, a,c);
+		lSwapped |= cmpSwap(A, a,b);
+		xSwapped |= cmpSwap(A, b,c);
 	} else if(j-i == 1) {
 		// middle pair
-		anySwapped |= cmpSwap(A, i,j);
+		xSwapped |= cmpSwap(A, i,j);
 	}
+
+	anySwapped |= xSwapped | rSwapped | lSwapped;
 
 	if(!anySwapped || n < 5)	// no inversions found or remaining in this partition
 		return anySwapped;
 
-	return anySwapped | QuadCircleSort(A, l, m) | QuadCircleSort(A, m, r);
+	if(xSwapped || lSwapped)
+		anySwapped |= QuadCircleSort(A, l, m);
+	if(xSwapped || rSwapped)
+		anySwapped |= QuadCircleSort(A, m, r);
+
+	return anySwapped;
 }
 
 void QuadCircleSort(SortArray& A)
@@ -164,6 +171,8 @@ bool MartiniSort(SortArray& A, const size_t l, const size_t r)
 
 	do {
 		size_t i,j;
+
+		xSwapped = false, lSwapped = false, rSwapped = false;
 
 		for(i=l, j=r-1; j-i >= 3; i++, j--) {
 			// 4-element sorting network, truncated
@@ -189,13 +198,13 @@ bool MartiniSort(SortArray& A, const size_t l, const size_t r)
 
 		anySwapped |= xSwapped | rSwapped | lSwapped;
 
-		if(!(xSwapped | rSwapped | lSwapped) || n < 5)	// no inversions found or remaining in this partition
-			return anySwapped;
+		if(n < 5)	// no inversions remaining in this partition
+			break;
 
 		if(lSwapped || xSwapped)
-			lSwapped = MartiniSort(A, l, m);
+			anySwapped |= lSwapped = MartiniSort(A, l, m);
 		if(rSwapped || xSwapped)
-			rSwapped = MartiniSort(A, m, r);
+			anySwapped |= rSwapped = MartiniSort(A, m, r);
 	} while(lSwapped || rSwapped);
 
 	return anySwapped;
