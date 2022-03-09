@@ -152,6 +152,62 @@ void QuadCircleSort(SortArray& A)
 
 
 // ****************************************************************************
+// *** Martini Sort
+
+bool MartiniSort(SortArray& A, const size_t l, const size_t r)
+{
+	bool anySwapped = false, xSwapped = false, lSwapped = false, rSwapped = false;
+	const size_t n = r-l, n2 = n/2, m = l+n2;
+
+	if(n < 2)
+		return false;
+
+	do {
+		size_t i,j;
+
+		for(i=l, j=r-1; j-i >= 3; i++, j--) {
+			// 4-element sorting network, truncated
+			const size_t a=i, b=i+1, c=j-1, d=j;
+
+			xSwapped |= cmpSwap(A, a,d);
+			xSwapped |= cmpSwap(A, b,c);
+			lSwapped |= cmpSwap(A, a,b);
+			rSwapped |= cmpSwap(A, c,d);
+		}
+
+		if(j-i == 2) {
+			// 3-element sorting network
+			const size_t a=i, b=i+1, c=j;
+
+			xSwapped |= cmpSwap(A, a,c);
+			lSwapped |= cmpSwap(A, a,b);
+			xSwapped |= cmpSwap(A, b,c);
+		} else if(j-i == 1) {
+			// middle pair
+			xSwapped |= cmpSwap(A, i,j);
+		}
+
+		anySwapped |= xSwapped | rSwapped | lSwapped;
+
+		if(!(xSwapped | rSwapped | lSwapped) || n < 5)	// no inversions found or remaining in this partition
+			return anySwapped;
+
+		if(lSwapped || xSwapped)
+			lSwapped = MartiniSort(A, l, m);
+		if(rSwapped || xSwapped)
+			rSwapped = MartiniSort(A, m, r);
+	} while(lSwapped || rSwapped);
+
+	return anySwapped;
+}
+
+void MartiniSort(SortArray& A)
+{
+	MartiniSort(A, 0, A.size());
+}
+
+
+// ****************************************************************************
 // *** Bitonic Sort
 
 // from http://www.iti.fh-flensburg.de/lang/algorithmen/sortieren/bitonic/oddn.htm

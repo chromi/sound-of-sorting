@@ -31,6 +31,7 @@
 void OddEvenSort(class SortArray& a);
 void CircleSort(class SortArray& a);
 void QuadCircleSort(class SortArray& a);
+void MartiniSort(class SortArray& a);
 
 void BitonicSort(SortArray& a);
 void BitonicSortNetwork(SortArray& a);
