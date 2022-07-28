@@ -127,6 +127,12 @@ const struct AlgoEntry g_algolist[] =
 	UINT_MAX, UINT_MAX, _("Gap sequence: 1, 4, 9, 25, 64, 169, 441, 1156, 3025, ...") },
 	{ _("Shell Sort (Fibonacci cubed)"), &ShellSort_FibonacciCubed,
 	UINT_MAX, UINT_MAX, _("Gap sequence: 1, 8, 27, 125, 512, 2197, ...") },
+	{ _("Shell Sort (Leonardo)"), &ShellSort_Leonardo,
+	UINT_MAX, UINT_MAX, _("Gap sequence: 1, 3, 5, 9, 15, 25, 41, 67, 109, 177, 287, 464, ...") },
+	{ _("Shell Sort (Leonardo squared)"), &ShellSort_LeonardoSquared,
+	UINT_MAX, UINT_MAX, _("Gap sequence: 1, 9, 25, 81, 225, 1681, 4489, 11881, ...") },
+	{ _("Shell Sort (Leonardo cubed)"), &ShellSort_LeonardoCubed,
+	UINT_MAX, UINT_MAX, _("Gap sequence: 1, 27, 125, 729, 3375, ...") },
 
 	{ _("Merge Sort (recursive)"), &MergeSort, UINT_MAX, UINT_MAX,
 	_("Merge sort which merges two sorted sequences into a shadow array,"
@@ -210,7 +216,7 @@ const struct AlgoEntry g_algolist[] =
 	wxEmptyString },
 	{ _("Comb Sort (Fibonacci)"), &CombSortFibonacci, 250000, UINT_MAX,
 	wxEmptyString },
-	{ _("Groom Sort (Fibonacci)"), &GroomSort, UINT_MAX, UINT_MAX,
+	{ _("Groom Sort (Fibonacci)"), &GroomSort, 250000, UINT_MAX,
 	wxEmptyString },
 
 	{ _("Heap Sort"), &HeapSort, UINT_MAX, UINT_MAX,

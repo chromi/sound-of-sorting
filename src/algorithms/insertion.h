@@ -68,7 +68,10 @@ enum ShellSortIncrementType {
 	SHELL_PI_COPRIME,
 	SHELL_FIBONACCI,
 	SHELL_FIBONACCI_SQUARED,
-	SHELL_FIBONACCI_CUBED
+	SHELL_FIBONACCI_CUBED,
+	SHELL_LEONARDO,
+	SHELL_LEONARDO_SQUARED,
+	SHELL_LEONARDO_CUBED
 };
 extern ShellSortIncrementType g_shellsort_increment;
 
@@ -110,3 +113,6 @@ static inline void ShellSort_pi_Coprime(SortArray& A)		{ ShellSort(A, SHELL_PI_C
 static inline void ShellSort_Fibonacci(SortArray& A)		{ ShellSort(A, SHELL_FIBONACCI); }
 static inline void ShellSort_FibonacciSquared(SortArray& A)	{ ShellSort(A, SHELL_FIBONACCI_SQUARED); }
 static inline void ShellSort_FibonacciCubed(SortArray& A)	{ ShellSort(A, SHELL_FIBONACCI_CUBED); }
+static inline void ShellSort_Leonardo(SortArray& A)		{ ShellSort(A, SHELL_LEONARDO); }
+static inline void ShellSort_LeonardoSquared(SortArray& A)	{ ShellSort(A, SHELL_LEONARDO_SQUARED); }
+static inline void ShellSort_LeonardoCubed(SortArray& A)	{ ShellSort(A, SHELL_LEONARDO_CUBED); }

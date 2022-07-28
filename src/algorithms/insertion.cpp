@@ -722,6 +722,43 @@ std::vector<size_t> ShellSortIncrements(size_t n, ShellSortIncrementType t)
 			break;
 		}
 
+		case SHELL_LEONARDO: {
+		// related to Fibonacci numbers, Leonardo numbers arise from structure of Smoothsort heaps
+		// 1, 3, 5, 9, 15, 25, 41, ...
+			size_t i=0, j=1, k=1;
+			while(k < n) {
+				incs.push_back(k);
+				i = j;
+				j = k;
+				k = i+j+1;
+			}
+			break;
+		}
+
+		case SHELL_LEONARDO_SQUARED: {
+		// ratio is about 2.6, which is in the empirically favourable range.
+			size_t i=0, j=1, k=1;
+			while(k*k < n) {
+				incs.push_back(k*k);
+				i = j;
+				j = k;
+				k = i+j+1;
+			}
+			break;
+		}
+
+		case SHELL_LEONARDO_CUBED: {
+		// but ratio is about 4.236, which is more than the empirical ideal.
+			size_t i=0, j=1, k=1;
+			while(k*k*k < n) {
+				incs.push_back(k*k*k);
+				i = j;
+				j = k;
+				k = i+j+1;
+			}
+			break;
+		}
+
 		case SHELL_ROOT5_COPRIME: {
 		// Increment ratios of about 2.2 to 2.25 seem to work well,
 		// sqrt(5) is about 2.236 which seems like an awfully nice coincidence.
