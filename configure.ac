@@ -1,8 +1,8 @@
 # -*- mode: autoconf -*-
 
-AC_PREREQ(2.59)
+AC_PREREQ([2.71])
 
-AC_INIT(sound-of-sorting, 0.6.5)
+AC_INIT([sound-of-sorting],[0.6.5])
 AC_CONFIG_SRCDIR(src/WMain.cpp)
 AC_CONFIG_AUX_DIR(acscripts)
 
@@ -113,4 +113,5 @@ fi
 
 # transform Makefiles
 
-AC_OUTPUT([Makefile src/Makefile])
+AC_CONFIG_FILES([Makefile src/Makefile])
+AC_OUTPUT
