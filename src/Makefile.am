@@ -27,13 +27,19 @@ sound_of_sorting_SOURCES = \
 	wxClickText.cpp wxClickText.h \
 	$(COMMON)
 
-noinst_PROGRAMS = sorting-test
+noinst_PROGRAMS = sorting-test shell-analysis
 
 TESTS = sorting-test
 
 sorting_test_SOURCES = \
 	SortTest.cpp \
 	$(COMMON)
+
+shell_analysis_SOURCES = \
+	shellsort/sequences.cpp \
+	shellsort/frobenius.cpp \
+	shellsort/dijkstra.cpp \
+	shellsort/analysis.cpp
 
 AM_CXXFLAGS = -W -Wall @WX_CXXFLAGS@ @SDL_CFLAGS@ -Wno-deprecated-copy -Wno-ignored-qualifiers -Wno-cast-function-type
 LDADD = @WX_LIBS@ @SDL_LIBS@

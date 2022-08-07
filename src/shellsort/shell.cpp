@@ -1,65 +1,87 @@
-#include <vector>
-#include <stdint>
-#include <stdlib>
-#include <math>
+#import "shell.hpp"
 
-template <T>
-void tinyShellPass(std::vector<T>& A, const size_t gap)
+#import <stdlib>
+#import <math>
+
+using std::swap;
+using std::move;
+
+template <typename T>
+void ShellSorter::tinySort(vector<T>& A)
 {
-	for(size_t i = gap; i < A.size(); i++)
-		for(size_t j = i; j >= gap && A[j] < A[j-gap]; j -= gap)
-			std::swap(A[j], A[j-gap]);
+	auto seq = seqFactory.make(A.size());
+	size_t gap;
+
+	do {
+		gap = (*seq)();
+		for(size_t i = gap; i < A.size(); i++)
+			for(size_t j = i; j >= gap; j -= gap)
+				swap(A[j], A[j-gap]);
+	} while(gap > 1);
 }
 
-template <T>
-void fastShellPass(std::vector<T>& A, const size_t gap)
+template <typename T>
+void ShellSorter::fastSort(vector<T>& A)
 {
-	for(size_t i = gap; i < A.size(); i++) {
-		const T tmp = A[i];
-		for(size_t j = i; j >= gap; j -= gap) {
-			if(tmp < A[j-gap]) {
-				A[j] = A[j-gap];
-			} else {
-				if(j < i)
-					A[j] = tmp;
-				break;
+	auto seq = seqFactory.make(A.size());
+	size_t gap;
+
+	do {
+		gap = (*seq)();
+		const size_t l = seq.maxChain();
+
+		for(size_t i = gap; i < A.size(); i++) {
+			if(A[i] < A[i-gap]) {
+				const T tmp = move(A[i]);
+
+				size_t j=i, k=0;
+				do {
+					A[j] = move(A[j-gap]);
+					j -= gap;
+					k++;
+				} while(j >= gap && k < l && A[j] < A[j-gap]);
+
+				A[j] = move(tmp);
 			}
 		}
-	}
+	} while(gap > 1);
 }
 
-typedef struct {
-	uint64_t	compares;	// compares can be expensive and may thus dominate runtime
-	uint64_t	swaps;		// swaps or "exchanges" are the traditional measure of sorting cost
-	uint64_t	writes;		// writes are a better measure for modern cached-memory architectures
-	size_t		maxChain;	// to help validate estimates of worst-case performance
-	size_t		gap;		// for per-pass telemetry
-} Telemetry;
-
-template <T>
-void instrumentedShellPass(Telemetry& tm, std::vector<T>& A, const size_t gap)
+template <typename T>
+vector<Telemetry> ShellSorter::instrumentedSort(vector<T>& A)
 {
-	for(size_t i = gap; i < A.size(); i++) {
-		uint64_t chain = 0;
-		const T tmp = A[i];
-		for(size_t j = i; j >= gap; j -= gap) {
-			tm.compares++;
-			if(tmp < A[j-gap]) {
-				chain++;
-				tm.swaps++;
-				tm.writes++;
-				A[j] = A[j-gap];
-			} else {
-				if(j < i) {
+	vector<Telemetry> tmv;
+	auto seq = seqFactory.make(A.size());
+	size_t gap;
+
+	do {
+		gap = (*seq)();
+		Telemetry tm = {0,0,0,0, gap};
+
+		for(size_t i = gap; i < A.size(); i++) {
+			uint64_t chain = 0;
+
+			for(size_t j = i; j >= gap; j -= gap) {
+				tm.compares++;
+				if(A[j] < A[j-gap]) {
+					chain++;
+					tm.swaps++;
 					tm.writes++;
-					A[j] = tmp;
+					swap(A[j], A[j-gap]);
+				} else {
+					if(j < i)
+						tm.writes++;
+					break;
 				}
-				break;
 			}
+			if(chain > tm.maxChain)
+				tm.maxChain = chain;
 		}
-		if(chain > tm.maxChain)
-			tm.maxChain = chain;
-	}
+
+		tmv.push_back(tm);
+	} while(gap > 1);
+
+	return tmv;
 }
 
 template <T>
@@ -370,7 +392,7 @@ std::vector<Telemetry> ShellSortFibonacci3(std::vector<T>& A)
 	return tmv;
 }
 
-uint64_t gcd(uint64_t a, uint64_t b)
+static uint64_t gcd(uint64_t a, uint64_t b)
 {
 	while(b) {
 		size_t c = a % b;
@@ -380,7 +402,7 @@ uint64_t gcd(uint64_t a, uint64_t b)
 	return a;
 }
 
-bool isFullyCoprime(const std::vector<size_t>& ref, const size_t cand)
+static bool isFullyCoprime(const std::vector<size_t>& ref, const size_t cand)
 {
 	for(size_t i=0; i < ref.size(); i++)
 		if(gcd(ref[i], cand) != 1)
