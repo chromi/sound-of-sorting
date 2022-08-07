@@ -61,6 +61,8 @@ const struct AlgoEntry g_algolist[] =
 	wxEmptyString },
 	{ _("Binary Insertion Sort"), &BinaryInsertionSort, 10240, UINT_MAX,
 	wxEmptyString },
+	{ _("Exponential Insertion Sort"), &ExponentialInsertionSort, 10240, UINT_MAX,
+	wxEmptyString },
 	{ _("Block Insertion Sort"), &BlockInsertionSort, UINT_MAX, UINT_MAX,
 	_("Recursively assembles sorted blocks of size sqrt(N), then inserts them into the sorted list using binary searches and block rotates.  "
 	  "Each item is moved O(sqrt(N)) times; overall complexity O(N^(3/2)).") },

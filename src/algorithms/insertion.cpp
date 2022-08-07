@@ -85,7 +85,47 @@ void BinaryInsertionSort(SortArray& A)
 
 		size_t lo = 0, hi = i;
 		while (lo < hi) {
-			size_t mid = (lo + hi) / 2;
+			size_t mid = lo + (hi-lo)/2;
+			if (key < A[mid])
+				hi = mid;
+			else
+				lo = mid + 1;
+		}
+
+		// item has to go into position lo
+		A.unmark(i);
+		A.rotate(lo, i, i+1);
+	}
+}
+
+void ExponentialInsertionSort(SortArray& A)
+{
+	for (size_t i = 1; i < A.size(); ++i)
+	{
+		value_type key = A[i];
+
+		if(key >= A[i-1]) continue;
+
+		A.mark(i);
+
+		size_t hi = i-1, step = 2, lo = i - step;
+
+		while(step <= i && A[lo] > key) {
+			step *= 2;
+			hi = lo;
+			lo = i - step;
+		}
+		if(step > i)
+			lo = 0;
+		else
+			lo++;
+
+		// [lo..hi) is now a half-open interval containing the correct insertion point
+		// A[lo] is just right of either the array boundary or an element known to be <= A[i], and A[hi] > A[i]
+
+		// binary search in that interval
+		while (lo < hi) {
+			size_t mid = lo + (hi-lo)/2;
 			if (key < A[mid])
 				hi = mid;
 			else
