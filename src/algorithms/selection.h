@@ -30,6 +30,8 @@
 
 void SelectionSort(class SortArray& a);
 void DualSelectionSort(class SortArray& a);
+void SandpaperSort(class SortArray& a);
+void DualSandpaperSort(class SortArray& a);
 void CycleSort(class SortArray& a);
 
 void SurpriseSort(class SortArray& a);

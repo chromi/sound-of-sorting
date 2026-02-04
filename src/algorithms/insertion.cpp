@@ -1004,6 +1004,31 @@ void ShellSort(SortArray& A, ShellSortIncrementType t)
 	}
 }
 
+void ShellGnomeSort(SortArray& A, ShellSortIncrementType t)
+{
+	std::vector<size_t> incs = ShellSortIncrements(A.size(), t);
+
+	while (!incs.empty())
+	{
+		size_t k = incs.back();
+
+		incs.pop_back();
+
+		for(size_t i=0; i < k; i++) {
+			size_t j=i;
+			while(j+k < A.size()) {
+				if(A[j] > A[j+k]) {
+					A.swap(j, j+k);
+					if(j >= k)
+						j -= k;
+				} else {
+					j += k;
+				}
+			}
+		}
+	}
+}
+
 // ****************************************************************************
 // *** Comb Sort
 

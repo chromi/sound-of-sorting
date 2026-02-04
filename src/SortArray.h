@@ -600,7 +600,7 @@ public:
 		d = (a+b)/c;
 
 		for(size_t i=0; i < c; i++) {
-			size_t x = (b+i)%(a+b);
+			size_t x = (a > b) ? (b+i)%(a+b) : i;
 			const ArrayItem t = (*this)[x+l];
 			const unsigned char m = m_mark[x+l];
 

@@ -57,6 +57,11 @@ const struct AlgoEntry g_algolist[] =
 	{ _("Dual Selection Sort"), &DualSelectionSort, 10240, UINT_MAX,
 	wxEmptyString },
 
+	{ _("Sandpaper Sort"), &SandpaperSort, 10240, UINT_MAX,
+	wxEmptyString },
+	{ _("Dual Sandpaper Sort"), &DualSandpaperSort, 10240, UINT_MAX,
+	wxEmptyString },
+
 	{ _("Insertion Sort"), &InsertionSort, 10240, UINT_MAX,
 	wxEmptyString },
 	{ _("Binary Insertion Sort"), &BinaryInsertionSort, 10240, UINT_MAX,
@@ -210,6 +215,21 @@ const struct AlgoEntry g_algolist[] =
 	{ _("Cocktail Shaker Sort"), &CocktailShakerSort, 10240, UINT_MAX,
 	wxEmptyString },
 	{ _("Gnome Sort"), &GnomeSort, 10240, UINT_MAX,
+	wxEmptyString },
+
+	{ _("Gnome Shell Sort (Pratt 1971)"), &ShellGnomeSort_Pratt71, UINT_MAX, UINT_MAX,
+	wxEmptyString },
+	{ _("Gnome Shell Sort (Knuth 1973)"), &ShellGnomeSort_Knuth73, UINT_MAX, UINT_MAX,
+	wxEmptyString },
+	{ _("Gnome Shell Sort (Sedgewick 1982 Modified)"), &ShellGnomeSort_Sedgewick82Mod, UINT_MAX, UINT_MAX,
+	wxEmptyString },
+	{ _("Gnome Shell Sort (Incerpi-Sedgewick 1985)"), &ShellGnomeSort_Incerpi85, UINT_MAX, UINT_MAX,
+	wxEmptyString },
+	{ _("Gnome Shell Sort (Sedgewick 1986)"), &ShellGnomeSort_Sedgewick82Mod, UINT_MAX, UINT_MAX,
+	wxEmptyString },
+	{ _("Gnome Shell Sort (Ciura-Tokuda)"), &ShellGnomeSort_CiuraTokuda, UINT_MAX, UINT_MAX,
+	wxEmptyString },
+	{ _("Gnome Shell Sort (Leonardo)"), &ShellGnomeSort_Leonardo, UINT_MAX, UINT_MAX,
 	wxEmptyString },
 
 	{ _("Comb Sort (1/1.3)"), &CombSort, UINT_MAX, UINT_MAX,

@@ -101,6 +101,31 @@ void DualSelectionSort(SortArray& A)
 }
 
 // ****************************************************************************
+// *** Sandpaper Sort
+
+void SandpaperSort(SortArray& A)
+{
+	for (size_t i = 0; i < A.size()-1; ++i)
+		for (size_t j = i+1; j < A.size(); ++j)
+			if (A[j] < A[i])
+				A.swap(j, i);
+}
+
+void DualSandpaperSort(SortArray& A)
+{
+	for (size_t x=0, y=A.size()-1; x < y; x++, y--) {
+		if(A[x] > A[y])
+			A.swap(x, y);
+		for(size_t i=x+1; i < y; i++) {
+			if(A[i] < A[x])
+				A.swap(i, x);
+			else if(A[y] < A[i])
+				A.swap(i, y);
+		}
+	}
+}
+
+// ****************************************************************************
 // *** Cycle Sort
 
 // Adapted from http://en.wikipedia.org/wiki/Cycle_sort

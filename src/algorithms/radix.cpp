@@ -81,7 +81,7 @@ void RadixSortMSD(SortArray& A, size_t lo, size_t hi, size_t depth)
 		i += count[ (A[lo+i].get() / base % RADIX) ];
 	}
 
-	A.unmark_all();
+	A.unmark(lo); A.unmark(hi-1);
 
 	// no more depth to sort?
 	if (depth+1 > pmax) return;

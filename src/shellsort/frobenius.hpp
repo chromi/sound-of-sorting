@@ -16,15 +16,17 @@
 #include <deque>
 #include <vector>
 
-#include <stdint>
-#include <stdio>
+#include <stdint.h>
+#include <stdio.h>
+
+#define unlikely(x)	__builtin_expect(!!(x), 0)
 
 using std::sort;
 
 using std::deque;
 using std::vector;
 
-// from shell.cpp
+// from sequences.cpp
 extern uint64_t gcd(uint64_t, uint64_t);
 
 class Frobenius
@@ -35,8 +37,10 @@ protected:
 	uint64_t         gcd;
 	uint64_t         frobenius;
 
+	static constexpr size_t maxSmartBasis = 1ULL << 32;
+
 public:
-	Frobenius(vector<uint64_t> factors) :
+	Frobenius(vector<uint64_t> factors, uint64_t limit = ~((uint64_t) 0)) :
 		basis(factors),
 		tree(),
 		gcd(1),
@@ -56,11 +60,11 @@ public:
 			gcd = ::gcd(gcd, basis[i]);
 
 		// Calculate the tree modulo the reduced smallest factor
-		sort(basis);
+		sort(basis.begin(), basis.end());
 		const uint64_t a = basis[0] / gcd;
 
 		// If we can't allocate enough memory to run the BFDU algorithm, we abort
-		if(a != (size_t) a)
+		if(a != (size_t) a || a >= maxSmartBasis)
 			return;
 
 		vector<uint64_t> S;	// path total weights
@@ -68,18 +72,17 @@ public:
 		deque<size_t>    Q;	// processing queue
 
 		try {
+			tree.resize(a);
 			S.resize(a);
 			inQ.resize(a);
-			Q.reserve(basis.size() * basis.size());
-
-			// allocate the P vector last, so it remains empty if any previous allocations fail
-			tree.resize(a);
-		} catch(std::bad_alloc e) {
+		} catch(std::bad_alloc& e) {
+			tree.resize(0);
+			tree.shrink_to_fit();
 			return;
 		}
 
 		// Beihoffer-Nijenhuis BFDU algorithm
-		tree[0] = basis.size() > 255 ? 255 : basis.size();
+		tree[0] = basis.size() >= 255 ? 255 : basis.size()-1;
 		S[0] = 0;
 		inQ[0] = true;
 		Q.push_back(0);
@@ -93,6 +96,7 @@ public:
 		while(!Q.empty()) {
 			const size_t v = Q.front();
 			Q.pop_front();
+			inQ[v] = false;
 
 			// iterate over outgoing live paths from node v
 			for(size_t j=1; j <= tree[v]; j++) {
@@ -100,7 +104,7 @@ public:
 				const uint64_t w = S[v] + basis[j] / gcd;
 
 				// check for overflow
-				if(w < S[v] || w < basis[j] / gcd)
+				if(w < S[v] || w < basis[j] / gcd || w > limit)
 					break;
 
 				// update node u
@@ -117,7 +121,7 @@ public:
 		}
 
 		// Obtain the Frobenius number
-		uint64_t mS;
+		uint64_t mS = 0;
 		for(size_t i=1; i < a; i++) {
 			if(!tree[i]) {
 				// node was not reached - Frobenius number is not representable, so leave it at maximum
@@ -130,7 +134,7 @@ public:
 		if(~((uint64_t) 0) / gcd > (mS - a))
 			frobenius = gcd * (mS - a);
 
-		// The Frobenius tree is now encoded in tree[] andcan be used to identify whether (and how) an integer can be obtained from the basis.
+		// The Frobenius tree is now encoded in tree[] and can be used to identify whether (and how) an integer can be obtained from the basis.
 		// NB: Any basis factors beyond the 256th rank will not be used.
 		//     This is not a problem as long as they are above the actual Frobenius number, or linearly dependent themselves.
 		//     One of these conditions is always true for all interesting Shellsort sequences.
@@ -175,6 +179,58 @@ public:
 		return false;
 	}
 
+	void printObtainPathBruteForce(uint64_t x) const {
+		if(basis.empty()) {
+			fprintf(stderr, "No basis factors.\n");
+			return;
+		}
+
+		fprintf(stderr, "%18lu: ", x);
+
+		if(x % gcd) {
+			fprintf(stderr, "is coprime to all the basis factors (GCD = %lu).\n", gcd);
+			return;
+		}
+
+		vector<uint64_t> multiples(basis.size(), 0);
+		uint64_t sum = 0;
+		size_t i = basis.size();
+
+		do {
+			while(--i) {
+				multiples[i] = (x - sum) / basis[i];
+				sum += multiples[i] * basis[i];
+			}
+
+			if(!((x - sum) % basis[0])) {
+				multiples[0] = (x - sum) / basis[0];
+				sum = 0;
+
+				bool firstFactor = true;
+				for(size_t j = 0; j < basis.size(); j++) {
+					if(multiples[j]) {
+						fprintf(stderr, "%s%lu*%lu", firstFactor ? "" : " + ", multiples[j], basis[j]);
+						firstFactor = false;
+						sum += basis[j] * multiples[j];
+					}
+				}
+
+				fprintf(stderr, " = %lu\n", sum);
+				return;
+			}
+
+			while(i < basis.size() && !multiples[i])
+				i++;
+
+			if(i < basis.size()) {
+				multiples[i]--;
+				sum -= basis[i];
+			}
+		} while(i < basis.size());
+
+		fprintf(stderr, "is not obtainable from the basis factors.\n");
+	}
+
 	bool isObtainable(uint64_t x) const {
 		// if the tree couldn't be built due to lack of memory, brute-force it
 		if(tree.empty())
@@ -193,7 +249,7 @@ public:
 		size_t   v = (x / gcd) % (basis[0] / gcd);
 		uint64_t w = 0;
 
-		while(v) {
+		while(v && w * gcd < x) {
 			if(!tree[v]) {
 				// this node was skipped due to overflow
 				return false;
@@ -207,6 +263,44 @@ public:
 		return w * gcd <= x;
 	}
 
+	void printObtainPath(uint64_t x) const {
+		if(tree.empty()) {
+			fprintf(stderr, "Path tree is empty.\n");
+			return;
+		}
+
+		fprintf(stderr, "%18lu: ", x);
+
+		if(x % gcd) {
+			fprintf(stderr, "is coprime to all the basis factors (GCD = %lu).\n", gcd);
+			return;
+		}
+
+	//	if(!isObtainable(x)) {
+	//		fprintf(stderr, "is not obtainable from the basis factors.\n");
+	//		return;
+	//	}
+
+		const size_t a = tree.size();
+		size_t   v = (x / gcd) % (basis[0] / gcd);
+		uint64_t w = 0;
+
+		while(v && w * gcd < x) {
+			if(!tree[v]) {
+				fprintf(stderr, "was not reached in the path tree.\n");
+				return;
+			}
+
+			fprintf(stderr, "%s%lu", w ? " + " : "", basis[tree[v]]);
+
+			uint64_t d = basis[tree[v]] / gcd;
+			v = (v + a - (d % a)) % a;
+			w += d;
+		}
+
+		fprintf(stderr, " = %lu\n", w * gcd);
+	}
+
 	vector<uint64_t> frobeniusSet(uint64_t base, uint64_t limit) const {
 		vector<uint64_t> out;
 
@@ -216,7 +310,30 @@ public:
 			if(x > frobenius)
 				break;
 
-			if(!isObtainable(x))
+			if(!isObtainable(x)) {
+			//	if(!isObtainableBruteForce(x)) {
+					out.push_back(x);
+			//	} else {
+			//		fprintf(stderr, "Mismatch between smart and brute-force results...\n");
+			//		fprintf(stderr, "Smart: "); printObtainPath(x);
+			//		fprintf(stderr, "Brute: "); printObtainPathBruteForce(x);
+			//	}
+			}
+		}
+
+		return out;
+	}
+
+	vector<uint64_t> frobeniusSetBruteForce(uint64_t base, uint64_t limit) const {
+		vector<uint64_t> out;
+
+		for(uint64_t i=0; i < limit/base; i++) {
+			uint64_t x = base * (i+1);
+
+			if(x > frobenius)
+				break;
+
+			if(!isObtainableBruteForce(x))
 				out.push_back(x);
 		}
 
@@ -245,6 +362,8 @@ public:
 		if(!!(frobenius+1) && (isObtainable(frobenius) || !isObtainable(frobenius+1))) {
 			fprintf(stderr, "Frobenius number obtained is incorrect.\n");
 			return false;
+		} else {
+			fprintf(stderr, "Frobenius number:  %lu\n", frobenius);
 		}
 
 		if(redundant.empty())
@@ -256,7 +375,7 @@ public:
 			if(!prompted)
 				fprintf(stderr, "Unused factors needed:");
 			prompted = true;
-			fprintf(stderr, " %llu", redundant[i]);
+			fprintf(stderr, " %lu", redundant[i]);
 		}
 
 		if(prompted)

@@ -76,6 +76,7 @@ enum ShellSortIncrementType {
 extern ShellSortIncrementType g_shellsort_increment;
 
 void ShellSort(SortArray& a, ShellSortIncrementType t);
+void ShellGnomeSort(SortArray& a, ShellSortIncrementType t);
 void CombSort(class SortArray& a);
 void CombSortPratt(class SortArray& a);
 void CombSortFibonacci(class SortArray& a);
@@ -116,3 +117,12 @@ static inline void ShellSort_FibonacciCubed(SortArray& A)	{ ShellSort(A, SHELL_F
 static inline void ShellSort_Leonardo(SortArray& A)		{ ShellSort(A, SHELL_LEONARDO); }
 static inline void ShellSort_LeonardoSquared(SortArray& A)	{ ShellSort(A, SHELL_LEONARDO_SQUARED); }
 static inline void ShellSort_LeonardoCubed(SortArray& A)	{ ShellSort(A, SHELL_LEONARDO_CUBED); }
+
+static inline void ShellGnomeSort(SortArray& A)					{ ShellGnomeSort(A, g_shellsort_increment); }
+static inline void ShellGnomeSort_Pratt71(SortArray& A)			{ ShellGnomeSort(A, SHELL_1971_PRATT); }
+static inline void ShellGnomeSort_Knuth73(SortArray& A)			{ ShellGnomeSort(A, SHELL_1973_KNUTH); }
+static inline void ShellGnomeSort_Sedgewick82Mod(SortArray& A)	{ ShellGnomeSort(A, SHELL_1982_SEDGEWICK_MODIFIED); }
+static inline void ShellGnomeSort_Incerpi85(SortArray& A)		{ ShellGnomeSort(A, SHELL_1985_INCERPI); }
+static inline void ShellGnomeSort_Sedgewick86(SortArray& A)		{ ShellGnomeSort(A, SHELL_1986_SEDGEWICK); }
+static inline void ShellGnomeSort_CiuraTokuda(SortArray& A)		{ ShellGnomeSort(A, SHELL_CIURA_TOKUDA); }
+static inline void ShellGnomeSort_Leonardo(SortArray& A)		{ ShellGnomeSort(A, SHELL_LEONARDO); }
