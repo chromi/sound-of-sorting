@@ -17,8 +17,12 @@ static const uint64_t limit = 1ULL << 40;
 
 void printFrobeniusSet(const Sequence& seq)
 {
+	const std::string filename1 = seq.shortName + ".sets.tsv";
+	const std::string filename2 = seq.shortName + ".frob.tsv";
 	std::vector<uint64_t> s = seq.seq;
 	DoubleVec lens, costs;
+	FILE* sfp = fopen(filename1.c_str(), "w");
+	FILE* ffp = fopen(filename2.c_str(), "w");
 
 	for(double s=12*4, len=16; len <= limit; s++, len=rint(pow(2, s/12))) {
 		lens.push_back(len);
@@ -57,14 +61,25 @@ void printFrobeniusSet(const Sequence& seq)
 		}
 		printf("\n");
 		fflush(stdout);
+
+		fprintf(sfp, "%lu\t%lu\t|", base, smartFS.size());
+		for(size_t j=0; j < smartFS.size(); j++)
+			fprintf(sfp, "\t%lu", smartFS[j]);
+		fprintf(sfp, "\n");
+		fflush(sfp);
 	}
 
 //	Curve crv = fitCurve(lens, costs);
 //	printf("\tcost = %g * N^%g * ln^%g(N) + %g\n", crv.a, crv.b, crv.c, crv.d);
 
-	for(size_t i=0; i < lens.size(); i++)
+	for(size_t i=0; i < lens.size(); i++) {
 		printf("%18.0f: %18.0f\n",      lens[i], costs[i]);
 //		printf("%18.0f: %18.0f %18.0f\n", lens[i], costs[i], crv(lens[i]));
+		fprintf(ffp, "%.0f\t%.0f\n", lens[i], costs[i]);
+	}
+
+	fclose(sfp);
+	fclose(ffp);
 }
 
 void compareFrobeniusSets(const Sequence& seq)
@@ -102,7 +117,7 @@ void compareFrobeniusSets(const Sequence& seq)
 				printf("\n");
 		}
 		printf("\n");
-	}	
+	}
 }
 
 
