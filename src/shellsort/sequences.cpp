@@ -56,6 +56,16 @@ static Sequence Pratt71(uint64_t a, uint64_t b) {
 	return seq;
 }
 
+static Sequence Pratt1128Plus(void) {
+	Sequence seq = { "Pratt1128Plus", "Pratt {11,28} plus 4 and 69", { 1, 4, 11, 28, 69 } };
+	Sequence pseq = Pratt71(11,28);
+
+	for(size_t i = 3; i < pseq.seq.size(); i++)
+		seq.seq.push_back(pseq.seq[i]);
+
+	return seq;
+}
+
 static Sequence Knuth73(void) {
 	Sequence seq = { "Knuth", "Knuth 1973", {} };
 
@@ -662,4 +672,6 @@ void populateSequences(void) {
 
 	sequences.push_back(ConsecutiveFibonacci());
 	sequences.push_back(ORLP());
+
+	sequences.push_back(Pratt1128Plus());
 }

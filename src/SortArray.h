@@ -27,6 +27,7 @@
 #include <vector>
 #include <algorithm>
 #include <stdlib.h>
+#include <stdint.h>
 
 #include <wx/log.h>
 #include <wx/thread.h>
