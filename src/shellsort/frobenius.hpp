@@ -16,6 +16,7 @@
 #include <deque>
 #include <vector>
 
+#include <math.h>
 #include <stdint.h>
 #include <stdio.h>
 
@@ -63,8 +64,9 @@ public:
 		sort(basis.begin(), basis.end());
 		const uint64_t a = basis[0] / gcd;
 
-		// If we can't allocate enough memory to run the BFDU algorithm, we abort
-		if(a != (size_t) a || a >= maxSmartBasis)
+		// If we can't allocate enough memory to run the BFDU algorithm, we abort.
+		// We also revert to the "dumb" algorithm if we're too close to the selected analysis limit.
+		if(a != (size_t) a || a >= maxSmartBasis || a > pow(limit, 2/3.0))
 			return;
 
 		vector<uint64_t> S;	// path total weights
