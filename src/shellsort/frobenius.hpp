@@ -41,7 +41,7 @@ protected:
 	static constexpr size_t maxSmartBasis = 1ULL << 32;
 
 public:
-	Frobenius(vector<uint64_t> factors, uint64_t limit = ~((uint64_t) 0)) :
+	Frobenius(vector<uint64_t> factors, uint64_t limit = ~((uint64_t) 0), bool dumb = false) :
 		basis(factors),
 		tree(),
 		gcd(1),
@@ -66,7 +66,7 @@ public:
 
 		// If we can't allocate enough memory to run the BFDU algorithm, we abort.
 		// We also revert to the "dumb" algorithm if we're too close to the selected analysis limit.
-		if(a != (size_t) a || a >= maxSmartBasis || a > pow(limit, 2/3.0))
+		if(dumb || a != (size_t) a || a >= maxSmartBasis || a > pow(limit, 3/4.0))
 			return;
 
 		vector<uint64_t> S;	// path total weights
@@ -151,7 +151,7 @@ public:
 			return false;
 		if(x % gcd)
 			return false;
-		if(x > frobenius)
+		if(x > frobenius || x > ((basis[0] * basis[1]) - (basis[0] + basis[1])))
 			return true;
 		if(x < basis[0])
 			return false;
@@ -329,7 +329,9 @@ public:
 	vector<uint64_t> frobeniusSetBruteForce(uint64_t base, uint64_t limit) const {
 		vector<uint64_t> out;
 
-		for(uint64_t i=0; i < limit/base; i++) {
+		uint64_t frob_lim = (basis[0] * basis[1]) - (basis[0] + basis[1]);
+
+		for(uint64_t i=0; i < limit/base && i <= frob_lim/base; i++) {
 			uint64_t x = base * (i+1);
 
 			if(x > frobenius)

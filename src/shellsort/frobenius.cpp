@@ -15,7 +15,7 @@ static const uint64_t limit = 1ULL << 40;
 //static const uint64_t limit = 1ULL << 32;
 //static const uint64_t limit = 5000;
 
-void printFrobeniusSet(const Sequence& seq)
+void printFrobeniusSet(const Sequence& seq, const bool bruteForce = false)
 {
 	const std::string filename1 = seq.shortName + ".sets.tsv";
 	const std::string filename2 = seq.shortName + ".frob.tsv";
@@ -34,37 +34,36 @@ void printFrobeniusSet(const Sequence& seq)
 		uint64_t base = s.front();
 		s.erase(s.begin());
 
-		Frobenius f(s, limit);
+		Frobenius f(s, limit, bruteForce);
 		printf("%18lu:", base);
 		fflush(stdout);
 
-		// std::vector<uint64_t> bruteFS = f.frobeniusSetBruteForce(base, limit);
-		std::vector<uint64_t> smartFS = f.frobeniusSet(base, limit);
+		std::vector<uint64_t> FS = bruteForce ? f.frobeniusSetBruteForce(base, limit) : f.frobeniusSet(base, limit);
 
-		printf(" (%lu)", smartFS.size());
+		printf(" (%lu)", FS.size());
 
 		for(size_t i=0, j=0; i < lens.size(); i++) {
-			while(j < smartFS.size() && smartFS[j] < lens[i])
+			while(j < FS.size() && FS[j] < lens[i])
 				j++;
 			costs[i] += j;
 		}
 
-		if(smartFS.size() < 10) {
-			for(size_t j=0; j < smartFS.size(); j++)
-				printf(" %lu", smartFS[j]);
+		if(FS.size() < 10) {
+			for(size_t j=0; j < FS.size(); j++)
+				printf(" %lu", FS[j]);
 		} else {
 			for(size_t j=0; j < 4; j++)
-				printf(" %lu", smartFS[j]);
+				printf(" %lu", FS[j]);
 			printf(" ...");
-			for(size_t j=smartFS.size()-4; j < smartFS.size(); j++)
-				printf(" %lu", smartFS[j]);
+			for(size_t j=FS.size()-4; j < FS.size(); j++)
+				printf(" %lu", FS[j]);
 		}
 		printf("\n");
 		fflush(stdout);
 
-		fprintf(sfp, "%lu\t%lu\t|", base, smartFS.size());
-		for(size_t j=0; j < smartFS.size(); j++)
-			fprintf(sfp, "\t%lu", smartFS[j]);
+		fprintf(sfp, "%lu\t%lu\t|", base, FS.size());
+		for(size_t j=0; j < FS.size(); j++)
+			fprintf(sfp, "\t%lu", FS[j]);
 		fprintf(sfp, "\n");
 		fflush(sfp);
 	}
@@ -320,12 +319,14 @@ int main(int argc, char *argv[])
 		}
 	} else {
 		bool frobenius = false;
+		bool brute     = false;
 		bool benchmark = false;
 		bool dijkstra  = false;
 		bool custom    = false;
 
 		for(int a=1; a < argc; a++) {
 			if(!strcmp(argv[a], "--frobenius")) frobenius = true;
+			if(!strcmp(argv[a], "--brute")    ) brute     = true;
 			if(!strcmp(argv[a], "--benchmark")) benchmark = true;
 			if(!strcmp(argv[a], "--dijkstra") ) dijkstra  = true;
 			if(!strcmp(argv[a], "--custom")   ) custom    = true;
@@ -353,10 +354,11 @@ int main(int argc, char *argv[])
 
 			if(proceed) {
 				printf("%s (%s)\n", seq.longName.c_str(), seq.shortName.c_str());
-				if(frobenius) printFrobeniusSet(seq);
+				if(frobenius) printFrobeniusSet(seq, false);
+				if(brute)     printFrobeniusSet(seq, true);
 				if(benchmark) analyseShell(seq);
 				if(dijkstra)  analyseDijkstra(seq);
-				if(!(frobenius | benchmark | dijkstra)) {
+				if(!(frobenius | brute | benchmark | dijkstra)) {
 					for(size_t j = 0; j < seq.seq.size(); j++)
 						printf(" %lu", seq.seq[j]);
 					printf("\n\n");
