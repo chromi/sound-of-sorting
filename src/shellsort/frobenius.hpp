@@ -66,7 +66,7 @@ public:
 
 		// If we can't allocate enough memory to run the BFDU algorithm, we abort.
 		// We also revert to the "dumb" algorithm if we're too close to the selected analysis limit.
-		if(dumb || a != (size_t) a || a >= maxSmartBasis || a > pow(limit, 3/4.0))
+		if(dumb || a != (size_t) a || a >= maxSmartBasis || a > pow(limit, 4/5.0))
 			return;
 
 		vector<uint64_t> S;	// path total weights
